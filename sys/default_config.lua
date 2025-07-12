@@ -7,7 +7,6 @@ M.default_config = {
         ["default-yank-register"] = '"',
         ["middle-click-paste"] = true,
         ["scroll-lines"] = 3,
-        shell = {"sh", "-c"},
         ["line-number"] = "absolute",
         cursorline = false,
         cursorcolumn = false,

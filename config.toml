@@ -1,5 +1,9 @@
 [editor]
 scrolloff = 5
+mouse = true
+default-yank-register = '"'
+middle-click-paste = true
+scroll-lines = 3
 
 [editor.cursor-shape]
 normal = "underline"
