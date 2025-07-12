@@ -95,10 +95,47 @@ function M.setup_helix_health_command()
         end
         
         table.insert(lines, "")
+        table.insert(lines, "## Plugin Dependencies")
+        table.insert(lines, "")
+        
+        local plugin_dependencies = resolvers.get_plugin_dependencies()
+        local installed_plugins = 0
+        local missing_plugins = 0
+        
+        -- Sort plugin names for consistent output
+        local plugin_names = {}
+        for name, _ in pairs(plugin_dependencies) do
+            table.insert(plugin_names, name)
+        end
+        table.sort(plugin_names)
+        
+        for _, plugin_name in ipairs(plugin_names) do
+            local status = resolvers.check_plugin_status(plugin_name)
+            if status then
+                local plugin_status = status.installed and "✓ INSTALLED" or "✗ MISSING"
+                table.insert(lines, string.format("%-30s %-15s %s", plugin_name, plugin_status, status.description))
+                
+                if status.installed then
+                    installed_plugins = installed_plugins + 1
+                else
+                    missing_plugins = missing_plugins + 1
+                end
+            end
+        end
+        
+        table.insert(lines, "")
         table.insert(lines, "## Summary")
+        table.insert(lines, "### Configuration")
         table.insert(lines, "Resolved: " .. resolved_count)
         table.insert(lines, "Unresolved: " .. unresolved_count)
         table.insert(lines, "Coverage: " .. string.format("%.1f%%", (resolved_count / #config_keys) * 100))
+        table.insert(lines, "")
+        table.insert(lines, "### Plugins")
+        table.insert(lines, "Installed: " .. installed_plugins)
+        table.insert(lines, "Missing: " .. missing_plugins)
+        if #plugin_names > 0 then
+            table.insert(lines, "Plugin Coverage: " .. string.format("%.1f%%", (installed_plugins / #plugin_names) * 100))
+        end
         
         -- Create a new buffer to display the health report
         local buf = vim.api.nvim_create_buf(false, true)

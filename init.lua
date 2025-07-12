@@ -51,3 +51,9 @@ resolve_configs(config)
 
 -- Setup commands
 commands.setup_helix_health_command()
+
+-- Sample plugin dependencies
+resolvers.register_plugin_dependency("nvim-lspconfig", "LSP configuration for Neovim")
+resolvers.register_plugin_dependency("nvim-cmp", "Completion plugin for auto-completion features")
+resolvers.register_plugin_dependency("telescope.nvim", "Fuzzy finder for file picker functionality")
+resolvers.register_plugin_dependency("nvim-treesitter", "Syntax highlighting and parsing")

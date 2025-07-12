@@ -9,6 +9,9 @@ M.command_resolvers = {}
 -- Registry to track keymap resolution status
 M.keymap_status = {}
 
+-- Registry to store plugin dependencies
+M.plugin_dependencies = {}
+
 -- Function to define a resolver for a specific config path
 function M.define_resolver(config_item_path, resolver_function)
     -- Check if the resolver function is valid
@@ -122,6 +125,82 @@ end
 -- Function to check if a path is a keymap path
 function M.is_keymap_path(path)
     return path:match("^keys%.%w+%.") ~= nil
+end
+
+-- Function to register a plugin dependency
+function M.register_plugin_dependency(plugin_name, description)
+    M.plugin_dependencies[plugin_name] = {
+        name = plugin_name,
+        description = description or plugin_name,
+        required = true
+    }
+end
+
+-- Function to check if a plugin is installed
+function M.is_plugin_installed(plugin_name)
+    -- Check if plugin is available via pcall require
+    local ok, _ = pcall(require, plugin_name)
+    if ok then
+        return true
+    end
+    
+    -- Check if plugin is in vim.g.loaded_plugins (for some plugin managers)
+    if vim.g.loaded_plugins and vim.g.loaded_plugins[plugin_name] then
+        return true
+    end
+    
+    -- Check &runtimepath for plugin directories
+    local runtimepath = vim.o.runtimepath
+    for path in string.gmatch(runtimepath, "[^,]+") do
+        -- Check for plugin in pack/*/start/ directories
+        local pack_start_pattern = path .. "/pack/*/start/" .. plugin_name
+        if vim.fn.isdirectory(vim.fn.expand(pack_start_pattern)) == 1 then
+            return true
+        end
+        
+        -- Check for plugin in pack/*/opt/ directories
+        local pack_opt_pattern = path .. "/pack/*/opt/" .. plugin_name
+        if vim.fn.isdirectory(vim.fn.expand(pack_opt_pattern)) == 1 then
+            return true
+        end
+        
+        -- Check for plugin directly in the runtime path (for lazy.nvim style)
+        local direct_plugin_path = path .. "/" .. plugin_name
+        if vim.fn.isdirectory(direct_plugin_path) == 1 then
+            return true
+        end
+        
+        -- Check for plugin in common subdirectories
+        local common_subdirs = { "lazy", "plugged", "bundle" }
+        for _, subdir in ipairs(common_subdirs) do
+            local subdir_plugin_path = path .. "/" .. subdir .. "/" .. plugin_name
+            if vim.fn.isdirectory(subdir_plugin_path) == 1 then
+                return true
+            end
+        end
+    end
+    
+    return false
+end
+
+-- Function to get all plugin dependencies
+function M.get_plugin_dependencies()
+    return M.plugin_dependencies
+end
+
+-- Function to check plugin dependency status
+function M.check_plugin_status(plugin_name)
+    local dependency = M.plugin_dependencies[plugin_name]
+    if not dependency then
+        return nil
+    end
+    
+    return {
+        name = dependency.name,
+        description = dependency.description,
+        required = dependency.required,
+        installed = M.is_plugin_installed(plugin_name)
+    }
 end
 
 -- Sample resolver implementations
