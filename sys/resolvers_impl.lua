@@ -1,6 +1,9 @@
 -- Resolver implementations for Helix configuration
 -- This file contains all the actual resolver functions that handle specific configuration paths
 
+-- Import logger
+local logger = require("sys.logger")
+
 -- Helper function to map Helix statusline elements to lualine components
 local function map_helix_to_lualine_component(element)
     local component_map = {
@@ -53,13 +56,13 @@ local function register_resolvers(resolvers)
             vim.opt.number = false
             vim.opt.relativenumber = false
         end
-        print("Line numbers set to: " .. tostring(value))
+        logger.resolver_success("editor.line-number", value)
     end)
 
     -- Cursor line resolver
     resolvers.define_resolver("editor.cursorline", function(value)
         vim.opt.cursorline = value
-        print("Cursor line highlight set to: " .. tostring(value))
+        logger.resolver_success("editor.cursorline", value)
     end)
 
     -- Mouse resolver
@@ -69,7 +72,7 @@ local function register_resolvers(resolvers)
         else
             vim.opt.mouse = ""
         end
-        print("Mouse support set to: " .. tostring(value))
+        logger.resolver_success("editor.mouse", value)
     end)
 
     -- Theme resolver
@@ -79,9 +82,9 @@ local function register_resolvers(resolvers)
         end)
         
         if success then
-            print("Theme set to: " .. value)
+            logger.resolver_success("theme", value)
         else
-            print("Failed to set theme '" .. value .. "': " .. tostring(err))
+            logger.resolver_error("theme", "Failed to set theme '" .. value .. "': " .. tostring(err))
             vim.notify("Theme '" .. value .. "' not found. Please install the theme or check the name.", vim.log.levels.WARN)
         end
     end)
@@ -89,7 +92,7 @@ local function register_resolvers(resolvers)
     -- Cursor shape resolver
     resolvers.define_resolver("editor.cursor-shape", function(value)
         if type(value) ~= "table" then
-            print("cursor-shape config must be a table")
+            logger.resolver_error("editor.cursor-shape", "cursor-shape config must be a table")
             return
         end
         
@@ -122,7 +125,7 @@ local function register_resolvers(resolvers)
         
         if #guicursor_parts > 0 then
             vim.opt.guicursor = table.concat(guicursor_parts, ",")
-            print("Cursor shape configured: " .. tostring(vim.opt.guicursor:get()))
+            logger.resolver_success("editor.cursor-shape", tostring(vim.opt.guicursor:get()))
         end
     end)
 
@@ -133,7 +136,7 @@ local function register_resolvers(resolvers)
         -- Check if lualine is available
         local lualine_ok, lualine = pcall(require, "lualine")
         if not lualine_ok then
-            print("lualine.nvim not found. Statusline configuration skipped.")
+            logger.plugin_missing("lualine.nvim")
             return
         end
         
@@ -206,16 +209,16 @@ local function register_resolvers(resolvers)
         
         -- Setup lualine with the configuration
         lualine.setup(lualine_config)
-        print("Statusline configured with lualine")
+        logger.resolver_success("editor.statusline", "configured with lualine")
     end)
 
     -- Auto-completion resolver
     resolvers.define_resolver("editor.auto-completion", function(value)
         if value then
             -- Register completion-related dependencies
-            print("Auto-completion enabled (requires nvim-cmp)")
+            logger.resolver_success("editor.auto-completion", "enabled (requires nvim-cmp)")
         else
-            print("Auto-completion disabled")
+            logger.resolver_success("editor.auto-completion", "disabled")
         end
     end)
 end

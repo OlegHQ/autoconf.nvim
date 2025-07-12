@@ -1,5 +1,8 @@
 local M = {}
 
+-- Import logger
+local logger = require("sys.logger")
+
 -- Registry to store resolvers
 M.resolvers = {}
 
@@ -67,7 +70,7 @@ function M.attempt_to_keymap(keys, mode, command)
             mode = mode,
             command = command
         }
-        print("Keymap unresolved: " .. key_path .. " -> Command '" .. command .. "' has no command resolver")
+        logger.keymap_error(key_path, "Command '" .. command .. "' has no command resolver")
         return false
     end
     
@@ -103,9 +106,9 @@ function M.attempt_to_keymap(keys, mode, command)
     }
     
     if success then
-        print("Keymap resolved: " .. key_path .. " -> " .. tostring(command))
+        logger.keymap_success(key_path, command)
     else
-        print("Keymap failed: " .. key_path .. " -> " .. tostring(err))
+        logger.keymap_error(key_path, tostring(err))
     end
     
     return success
@@ -212,7 +215,7 @@ resolvers_impl.init_resolvers(M)
 
 -- Debug function to show resolver lookup process
 function M.debug_resolver_lookup(path, value)
-    print("=== Debug: Resolver lookup for path: " .. path .. " ===")
+    if not logger.is_debug_enabled() then return end
     
     -- Split the path into parts
     local parts = {}
@@ -220,23 +223,24 @@ function M.debug_resolver_lookup(path, value)
         table.insert(parts, part)
     end
     
-    -- Show what paths will be tried
-    print("Trying paths in order:")
+    -- Create paths_tried table for the logger
+    local paths_tried = {}
     for i = #parts, 1, -1 do
         local current_path = table.concat(parts, ".", 1, i)
         local has_resolver = M.has_resolver(current_path)
-        print("  " .. current_path .. " -> " .. (has_resolver and "FOUND" or "not found"))
+        
+        table.insert(paths_tried, {
+            path = current_path,
+            found = has_resolver,
+            direct = i == #parts
+        })
         
         if has_resolver then
-            if i == #parts then
-                print("    Will call with original value: " .. tostring(value))
-            else
-                print("    Will call with nested structure for remaining parts")
-            end
             break
         end
     end
-    print("=== End Debug ===")
+    
+    logger.debug_resolver_lookup(path, paths_tried)
 end
 
 -- Helper function to check if a path would be resolved using hierarchical fallback

@@ -6,6 +6,10 @@ local loader = require("sys.loader")
 local resolvers = require("sys.resolvers")
 local commands = require("sys.commands")
 local default_config = require("sys.default_config")
+local logger = require("sys.logger")
+
+-- Setup logger command
+logger.setup_debug_command()
 
 -- Path to the TOML config file (update this to your actual config path)
 local config_path = "config.toml"
@@ -75,49 +79,43 @@ local function try_resolve_with_fallback(full_path, value, debug)
     -- Split the path into parts
     local path_parts = split_path(full_path)
     
-    if debug then
-        print("=== Debug: Resolving path: " .. full_path .. " ===")
-        print("Trying paths in order:")
-    end
+    local paths_tried = {}
     
     -- Try resolvers from most specific to least specific
     for i = #path_parts, 1, -1 do
         -- Build the current path to try
         local current_path = table.concat(path_parts, ".", 1, i)
+        local has_resolver = resolvers.has_resolver(current_path)
         
-        if debug then
-            local has_resolver = resolvers.has_resolver(current_path)
-            print("  " .. current_path .. " -> " .. (has_resolver and "FOUND" or "not found"))
-        end
+        table.insert(paths_tried, {
+            path = current_path,
+            found = has_resolver,
+            direct = i == #path_parts
+        })
         
         -- Check if there's a resolver for this path
-        if resolvers.has_resolver(current_path) then
+        if has_resolver then
             local resolver = resolvers.get_resolver(current_path)
             
             -- If this is the exact path, use the original value
             if i == #path_parts then
-                if debug then
-                    print("    Calling resolver with original value: " .. tostring(value))
-                end
                 resolver(value)
             else
                 -- Build nested structure for remaining path parts
                 local nested_value = build_nested_table(path_parts, value, i + 1)
-                if debug then
-                    print("    Calling resolver with nested structure for remaining parts")
-                end
                 resolver(nested_value)
+                logger.resolver_fallback(full_path, current_path)
             end
             
             if debug then
-                print("=== Resolved successfully ===")
+                logger.debug_resolver_lookup(full_path, paths_tried)
             end
             return true
         end
     end
     
     if debug then
-        print("=== No resolver found ===")
+        logger.debug_resolver_lookup(full_path, paths_tried)
     end
     return false
 end
@@ -144,9 +142,11 @@ end
 -- Load the TOML config
 local user_config, err = loader.load_config(config_path)
 if not user_config then
-    vim.notify("Failed to load config: " .. err, vim.log.levels.ERROR)
+    logger.config_error(config_path, err)
     return
 end
+
+logger.config_loaded(config_path)
 
 -- Merge default config with user config (user config overrides defaults)
 local config = deep_merge(default_config.default_config, user_config)
