@@ -5,16 +5,45 @@ package.path = package.path .. ";" .. config_path .. "/?.lua;" .. config_path ..
 local loader = require("sys.loader")
 local resolvers = require("sys.resolvers")
 local commands = require("sys.commands")
+local default_config = require("sys.default_config")
 
 -- Path to the TOML config file (update this to your actual config path)
 local config_path = "config.toml"
 
--- Load and print the config
-local config, err = loader.load_config(config_path)
-if not config then
+-- Deep merge function to merge user config with defaults
+local function deep_merge(default, override)
+    local result = {}
+    
+    -- Copy all values from default
+    for key, value in pairs(default) do
+        if type(value) == "table" then
+            result[key] = deep_merge(value, {})
+        else
+            result[key] = value
+        end
+    end
+    
+    -- Override with values from override table
+    for key, value in pairs(override) do
+        if type(value) == "table" and type(result[key]) == "table" then
+            result[key] = deep_merge(result[key], value)
+        else
+            result[key] = value
+        end
+    end
+    
+    return result
+end
+
+-- Load the TOML config
+local user_config, err = loader.load_config(config_path)
+if not user_config then
     vim.notify("Failed to load config: " .. err, vim.log.levels.ERROR)
     return
 end
+
+-- Merge default config with user config (user config overrides defaults)
+local config = deep_merge(default_config.default_config, user_config)
 
 function resolve_configs(config, prefix)
     prefix = prefix or ""
@@ -52,7 +81,8 @@ resolve_configs(config)
 -- Setup commands
 commands.setup_helix_health_command()
 
--- Sample plugin dependencies
+-- Plugin dependencies
+resolvers.register_plugin_dependency("lualine.nvim", "Statusline plugin for statusline configuration")
 resolvers.register_plugin_dependency("nvim-lspconfig", "LSP configuration for Neovim")
 resolvers.register_plugin_dependency("nvim-cmp", "Completion plugin for auto-completion features")
 resolvers.register_plugin_dependency("telescope.nvim", "Fuzzy finder for file picker functionality")
