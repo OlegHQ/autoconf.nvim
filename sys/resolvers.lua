@@ -131,27 +131,40 @@ function M.is_keymap_path(path)
 end
 
 -- Function to register a plugin dependency
-function M.register_plugin_dependency(plugin_name, description)
+function M.register_plugin_dependency(plugin_name, description, lua_module_name)
     M.plugin_dependencies[plugin_name] = {
         name = plugin_name,
         description = description or plugin_name,
-        required = true
+        required = true,
+        lua_module_name = lua_module_name
     }
 end
 
 -- Function to check if a plugin is installed
 function M.is_plugin_installed(plugin_name)
-    -- Check if plugin is available via pcall require
-    local ok, _ = pcall(require, plugin_name)
-    if ok then
+    -- Get dependency info to check for a specific lua module
+    local dependency = M.plugin_dependencies[plugin_name]
+    local lua_module_name = dependency and dependency.lua_module_name
+
+    -- If a specific lua module is defined, try to require it first
+    if lua_module_name then
+        local ok, _ = pcall(require, lua_module_name)
+        if ok then
+            return true
+        end
+    end
+
+    -- Check if plugin is available via pcall require using its name
+    local ok_by_name, _ = pcall(require, plugin_name)
+    if ok_by_name then
         return true
     end
-    
+
     -- Check if plugin is in vim.g.loaded_plugins (for some plugin managers)
     if vim.g.loaded_plugins and vim.g.loaded_plugins[plugin_name] then
         return true
     end
-    
+
     -- Check &runtimepath for plugin directories
     local runtimepath = vim.o.runtimepath
     for path in string.gmatch(runtimepath, "[^,]+") do
@@ -160,19 +173,19 @@ function M.is_plugin_installed(plugin_name)
         if vim.fn.isdirectory(vim.fn.expand(pack_start_pattern)) == 1 then
             return true
         end
-        
+
         -- Check for plugin in pack/*/opt/ directories
         local pack_opt_pattern = path .. "/pack/*/opt/" .. plugin_name
         if vim.fn.isdirectory(vim.fn.expand(pack_opt_pattern)) == 1 then
             return true
         end
-        
+
         -- Check for plugin directly in the runtime path (for lazy.nvim style)
         local direct_plugin_path = path .. "/" .. plugin_name
         if vim.fn.isdirectory(direct_plugin_path) == 1 then
             return true
         end
-        
+
         -- Check for plugin in common subdirectories
         local common_subdirs = { "lazy", "plugged", "bundle" }
         for _, subdir in ipairs(common_subdirs) do
@@ -182,7 +195,7 @@ function M.is_plugin_installed(plugin_name)
             end
         end
     end
-    
+
     return false
 end
 

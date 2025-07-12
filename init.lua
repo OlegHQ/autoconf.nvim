@@ -158,8 +158,9 @@ resolve_configs(config, nil, false)
 commands.setup_helix_health_command()
 
 -- Plugin dependencies
-resolvers.register_plugin_dependency("lualine.nvim", "Statusline plugin for statusline configuration")
-resolvers.register_plugin_dependency("nvim-lspconfig", "LSP configuration for Neovim")
+resolvers.register_plugin_dependency("lualine.nvim", "Statusline plugin for statusline configuration", "lualine")
+resolvers.register_plugin_dependency("nvim-autopairs", "Auto-pairing of brackets and quotes", "nvim-autopairs")
+resolvers.register_plugin_dependency("nvim-lspconfig", "LSP configuration for Neovim", "lspconfig")
 resolvers.register_plugin_dependency("nvim-cmp", "Completion plugin for auto-completion features")
 resolvers.register_plugin_dependency("telescope.nvim", "Fuzzy finder for file picker functionality")
 resolvers.register_plugin_dependency("nvim-treesitter", "Syntax highlighting and parsing")
