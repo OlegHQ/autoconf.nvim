@@ -164,3 +164,6 @@ resolvers.register_plugin_dependency("nvim-lspconfig", "LSP configuration for Ne
 resolvers.register_plugin_dependency("nvim-cmp", "Completion plugin for auto-completion features")
 resolvers.register_plugin_dependency("telescope.nvim", "Fuzzy finder for file picker functionality")
 resolvers.register_plugin_dependency("nvim-treesitter", "Syntax highlighting and parsing")
+resolvers.register_plugin_dependency("gitsigns.nvim", "Git integration for diff signs in gutters", "gitsigns")
+resolvers.register_plugin_dependency("conform.nvim", "Formatting plugin for auto-format functionality", "conform")
+resolvers.register_plugin_dependency("cmp-path", "Path completion source for nvim-cmp", "cmp_path")
