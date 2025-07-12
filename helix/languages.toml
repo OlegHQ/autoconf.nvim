@@ -1,0 +1,109 @@
+# Example Helix languages configuration file
+
+[[language]]
+name = "rust"
+scope = "source.rust"
+injection-regex = "rust"
+file-types = ["rs"]
+roots = ["Cargo.toml", "Cargo.lock"]
+auto-format = true
+comment-token = "//"
+language-servers = ["rust-analyzer"]
+indent = { tab-width = 4, unit = "    " }
+
+[[language]]
+name = "python"
+scope = "source.python"
+injection-regex = "python"
+file-types = ["py", "pyi", "py3", "pyw", "ptl", "rpy", "cpy", "ipy", "pyt"]
+roots = ["pyproject.toml", "setup.py", "poetry.lock", "requirements.txt", "Pipfile", "tox.ini"]
+auto-format = true
+comment-token = "#"
+language-servers = ["pylsp"]
+indent = { tab-width = 4, unit = "    " }
+
+[[language]]
+name = "javascript"
+scope = "source.js"
+injection-regex = "(js|javascript)"
+file-types = ["js", "jsx", "mjs", "cjs"]
+roots = ["package.json", "tsconfig.json"]
+auto-format = true
+comment-token = "//"
+language-servers = ["typescript-language-server"]
+indent = { tab-width = 2, unit = "  " }
+
+[[language]]
+name = "typescript"
+scope = "source.ts"
+injection-regex = "(ts|typescript)"
+file-types = ["ts", "tsx"]
+roots = ["package.json", "tsconfig.json"]
+auto-format = true
+comment-token = "//"
+language-servers = ["typescript-language-server"]
+indent = { tab-width = 2, unit = "  " }
+
+[[language]]
+name = "lua"
+scope = "source.lua"
+injection-regex = "lua"
+file-types = ["lua"]
+roots = [".luarc.json", ".luacheckrc", ".stylua.toml", "selene.toml", ".git"]
+auto-format = true
+comment-token = "--"
+language-servers = ["lua-language-server"]
+indent = { tab-width = 2, unit = "  " }
+
+[[language]]
+name = "json"
+scope = "source.json"
+injection-regex = "json"
+file-types = ["json", "jsonc"]
+auto-format = true
+language-servers = ["vscode-json-language-server"]
+indent = { tab-width = 2, unit = "  " }
+
+[[language]]
+name = "toml"
+scope = "source.toml"
+injection-regex = "toml"
+file-types = ["toml"]
+auto-format = true
+comment-token = "#"
+language-servers = ["taplo"]
+indent = { tab-width = 2, unit = "  " }
+
+[[language]]
+name = "markdown"
+scope = "source.md"
+injection-regex = "md|markdown"
+file-types = ["md", "markdown", "mkd", "mdwn", "mdown", "markdn", "mdtxt", "mdtext", "workbook"]
+auto-format = true
+language-servers = ["marksman"]
+indent = { tab-width = 2, unit = "  " }
+
+[language-server.rust-analyzer]
+command = "rust-analyzer"
+
+[language-server.pylsp]
+command = "pylsp"
+
+[language-server.typescript-language-server]
+command = "typescript-language-server"
+args = ["--stdio"]
+
+[language-server.lua-language-server]
+command = "lua-language-server"
+
+[language-server.vscode-json-language-server]
+command = "vscode-json-language-server"
+args = ["--stdio"]
+
+[language-server.taplo]
+command = "taplo"
+args = ["lsp", "stdio"]
+
+[language-server.marksman]
+command = "marksman"
+args = ["server"]
