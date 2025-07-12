@@ -26,10 +26,21 @@ function resolve_configs(config, prefix)
             -- Recursively process nested tables
             resolve_configs(value, full_key)
         else
-            -- Check if there's a resolver for this config path
-            if resolvers.has_resolver(full_key) then
-                local resolver = resolvers.get_resolver(full_key)
-                resolver(value)
+            -- Special handling for keymap paths (keys.mode.combo)
+            if resolvers.is_keymap_path(full_key) then
+                -- Extract mode and keys from the path
+                local mode = full_key:match("^keys%.(%w+)%.")
+                local keys = full_key:match("^keys%.%w+%.(.+)$")
+                
+                if mode and keys then
+                    resolvers.attempt_to_keymap(keys, mode, value)
+                end
+            else
+                -- Check if there's a resolver for this config path
+                if resolvers.has_resolver(full_key) then
+                    local resolver = resolvers.get_resolver(full_key)
+                    resolver(value)
+                end
             end
         end
     end

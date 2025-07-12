@@ -58,7 +58,26 @@ function M.setup_helix_health_command()
         
         -- Check each config key
         for _, item in ipairs(config_keys) do
-            local status = resolvers.has_resolver(item.key) and "✓ RESOLVED" or "✗ NOT RESOLVED"
+            local status
+            local is_resolved = false
+            
+            -- Special handling for keymap paths
+            if resolvers.is_keymap_path(item.key) then
+                is_resolved = resolvers.is_keymap_resolved(item.key)
+                status = is_resolved and "✓ KEYMAP RESOLVED" or "✗ KEYMAP FAILED"
+                
+                -- Add error details if keymap failed
+                if not is_resolved then
+                    local keymap_status = resolvers.get_keymap_status(item.key)
+                    if keymap_status and keymap_status.error then
+                        status = status .. " (" .. tostring(keymap_status.error) .. ")"
+                    end
+                end
+            else
+                is_resolved = resolvers.has_resolver(item.key)
+                status = is_resolved and "✓ RESOLVED" or "✗ NOT RESOLVED"
+            end
+            
             local value_str = tostring(item.value)
             
             -- Truncate long values
@@ -66,9 +85,9 @@ function M.setup_helix_health_command()
                 value_str = value_str:sub(1, 47) .. "..."
             end
             
-            table.insert(lines, string.format("%-30s %-15s %s", item.key, status, value_str))
+            table.insert(lines, string.format("%-30s %-20s %s", item.key, status, value_str))
             
-            if resolvers.has_resolver(item.key) then
+            if is_resolved then
                 resolved_count = resolved_count + 1
             else
                 unresolved_count = unresolved_count + 1
