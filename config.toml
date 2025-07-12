@@ -70,13 +70,13 @@ mode.insert = "INSERT"
 mode.select = "SELECT"
 
 [keys.normal]
-space = { f = { f = "file_picker", g = "symbol_picker" } }
 "C-s" = "write"
 "C-q" = "quit"
-g = { d = "goto_definition", r = "goto_reference" }
+"gd" = "goto_definition"
+"gr" = "goto_reference"
 
 [keys.insert]
-"C-s" = "normal_mode"
+"C-c" = "normal_mode"
 
 [keys.select]
 "d" = "delete_selection"
