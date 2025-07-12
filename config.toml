@@ -1,2 +1,4 @@
 [editor.cursor-shape]
-insert = "bar"
+normal = "underline"
+insert = "underline"
+select = "underline"

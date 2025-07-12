@@ -324,7 +324,7 @@ M.define_resolver("editor.cursor-shape", function(value)
     
     if #guicursor_parts > 0 then
         vim.opt.guicursor = table.concat(guicursor_parts, ",")
-        print("Cursor shape configured: " .. vim.opt.guicursor:get())
+        print("Cursor shape configured: " .. tostring(vim.opt.guicursor:get()))
     end
 end)
 
@@ -427,6 +427,36 @@ M.define_command_resolver("goto_definition", function()
         vim.lsp.buf.definition()
     end
 end)
+
+
+-- Debug function to show resolver lookup process
+function M.debug_resolver_lookup(path, value)
+    print("=== Debug: Resolver lookup for path: " .. path .. " ===")
+    
+    -- Split the path into parts
+    local parts = {}
+    for part in path:gmatch("[^%.]+") do
+        table.insert(parts, part)
+    end
+    
+    -- Show what paths will be tried
+    print("Trying paths in order:")
+    for i = #parts, 1, -1 do
+        local current_path = table.concat(parts, ".", 1, i)
+        local has_resolver = M.has_resolver(current_path)
+        print("  " .. current_path .. " -> " .. (has_resolver and "FOUND" or "not found"))
+        
+        if has_resolver then
+            if i == #parts then
+                print("    Will call with original value: " .. tostring(value))
+            else
+                print("    Will call with nested structure for remaining parts")
+            end
+            break
+        end
+    end
+    print("=== End Debug ===")
+end
 
 M.define_command_resolver("goto_reference", function()
     return function()
