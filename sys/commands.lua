@@ -52,6 +52,15 @@ function M.setup_helix_health_command()
         table.insert(lines, "Configuration file: " .. config_path)
         table.insert(lines, "Total configuration keys: " .. #config_keys)
         table.insert(lines, "")
+        table.insert(lines, "## Configuration Keys")
+        table.insert(lines, "")
+        table.insert(lines, "Legend:")
+        table.insert(lines, "  ✓ RESOLVED (direct)      - Exact resolver found")
+        table.insert(lines, "  ✓ RESOLVED (via parent)  - Resolved through hierarchical fallback")
+        table.insert(lines, "  ✗ NOT RESOLVED          - No resolver found")
+        table.insert(lines, "")
+        table.insert(lines, string.format("%-30s %-35s %s", "Configuration Key", "Status", "Value"))
+        table.insert(lines, string.rep("-", 80))
         
         local resolved_count = 0
         local unresolved_count = 0
@@ -60,6 +69,7 @@ function M.setup_helix_health_command()
         for _, item in ipairs(config_keys) do
             local status
             local is_resolved = false
+            local resolver_info = ""
             
             -- Special handling for keymap paths
             if resolvers.is_keymap_path(item.key) then
@@ -74,8 +84,19 @@ function M.setup_helix_health_command()
                     end
                 end
             else
-                is_resolved = resolvers.has_resolver(item.key)
-                status = is_resolved and "✓ RESOLVED" or "✗ NOT RESOLVED"
+                -- Use hierarchical fallback logic to check if the key would be resolved
+                local would_resolve, resolver_path = resolvers.would_be_resolved(item.key)
+                is_resolved = would_resolve
+                
+                if is_resolved then
+                    if resolver_path == item.key then
+                        status = "✓ RESOLVED (direct)"
+                    else
+                        status = "✓ RESOLVED (via " .. resolver_path .. ")"
+                    end
+                else
+                    status = "✗ NOT RESOLVED"
+                end
             end
             
             local value_str = tostring(item.value)
@@ -85,7 +106,7 @@ function M.setup_helix_health_command()
                 value_str = value_str:sub(1, 47) .. "..."
             end
             
-            table.insert(lines, string.format("%-30s %-20s %s", item.key, status, value_str))
+            table.insert(lines, string.format("%-30s %-35s %s", item.key, status, value_str))
             
             if is_resolved then
                 resolved_count = resolved_count + 1

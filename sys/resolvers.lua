@@ -458,6 +458,40 @@ function M.debug_resolver_lookup(path, value)
     print("=== End Debug ===")
 end
 
+-- Helper function to check if a path would be resolved using hierarchical fallback
+-- This mimics the try_resolve_with_fallback logic but without calling the resolver
+function M.would_be_resolved(full_path)
+    -- Special handling for keymap paths
+    if M.is_keymap_path(full_path) then
+        local mode = full_path:match("^keys%.(%w+)%.")
+        local keys = full_path:match("^keys%.%w+%.(.+)$")
+        
+        if mode and keys then
+            -- For keymaps, check if the command has a resolver
+            -- We can't easily check this without the actual command value
+            -- So we'll just return true for keymap paths and let the actual keymap status handle it
+            return true
+        end
+        return false
+    end
+    
+    -- Split the path into parts
+    local parts = {}
+    for part in full_path:gmatch("[^%.]+") do
+        table.insert(parts, part)
+    end
+    
+    -- Try resolvers from most specific to least specific
+    for i = #parts, 1, -1 do
+        local current_path = table.concat(parts, ".", 1, i)
+        if M.has_resolver(current_path) then
+            return true, current_path
+        end
+    end
+    
+    return false, nil
+end
+
 M.define_command_resolver("goto_reference", function()
     return function()
         vim.lsp.buf.references()
