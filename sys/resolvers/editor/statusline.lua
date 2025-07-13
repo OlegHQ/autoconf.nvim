@@ -123,4 +123,71 @@ M.statusline = function(value)
     logger.resolver_success("editor.statusline", "configured with lualine")
 end
 
+
+
+M.bufferline = function(value)
+    -- Validate that the value is a string
+    if type(value) ~= "string" then
+        logger.resolver_error("editor.bufferline", "must be a string (always/never/multiple), got: " .. type(value))
+        return
+    end
+
+    if value == "always" then
+        -- Always show bufferline
+        vim.opt.showtabline = 2
+
+        -- Try to use bufferline.nvim if available
+        local bufferline_ok, bufferline = pcall(require, "bufferline")
+        if bufferline_ok then
+            bufferline.setup({
+                options = {
+                    mode = "buffers",
+                    numbers = "none",
+                    close_command = "bdelete! %d",
+                    right_mouse_command = "bdelete! %d",
+                    left_mouse_command = "buffer %d",
+                    middle_mouse_command = nil,
+                    indicator = {
+                        icon = '▎',
+                        style = 'icon',
+                    },
+                    buffer_close_icon = '',
+                    modified_icon = '●',
+                    close_icon = '',
+                    left_trunc_marker = '',
+                    right_trunc_marker = '',
+                    max_name_length = 18,
+                    max_prefix_length = 15,
+                    truncate_names = true,
+                    tab_size = 18,
+                    diagnostics = "nvim_lsp",
+                    diagnostics_update_in_insert = false,
+                    show_buffer_icons = true,
+                    show_buffer_close_icons = true,
+                    show_close_icon = true,
+                    show_tab_indicators = true,
+                    persist_buffer_sort = true,
+                    separator_style = "slant",
+                    enforce_regular_tabs = false,
+                    always_show_bufferline = true,
+                    sort_by = 'id'
+                }
+            })
+            logger.resolver_success("editor.bufferline", "always enabled with bufferline.nvim")
+        else
+            logger.resolver_success("editor.bufferline", "always enabled with built-in tabline")
+        end
+    elseif value == "multiple" then
+        -- Show bufferline only when multiple buffers
+        vim.opt.showtabline = 1
+        logger.resolver_success("editor.bufferline", "enabled for multiple buffers")
+    else -- "never"
+        -- Never show bufferline
+        vim.opt.showtabline = 0
+        logger.resolver_success("editor.bufferline", "disabled")
+    end
+end
+
+
+
 return M

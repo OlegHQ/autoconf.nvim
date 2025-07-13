@@ -231,7 +231,22 @@ local function gutters(value)
 end
 
 
+local line_number = function(value)
+    if value == "relative" then
+        vim.opt.number = true
+        vim.opt.relativenumber = true
+    elseif value == "absolute" then
+        vim.opt.number = true
+        vim.opt.relativenumber = false
+    else
+        vim.opt.number = false
+        vim.opt.relativenumber = false
+    end
+    logger.resolver_success("editor.line-number", value)
+end
+
 return {
     define_array_resolvers = define_resolver,
-    resolver = gutters
+    resolver = gutters,
+    line_number = line_number
 }
