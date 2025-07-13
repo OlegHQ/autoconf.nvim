@@ -11,6 +11,27 @@ gutters = ["diagnostics", "spacer", "line-numbers", "spacer", "diff"]
 auto-completion = true
 path-completion = true
 auto-format = true
+atomic-save = true
+auto-info = true
+bufferline = "never"
+color-modes = false
+completion-replace = false
+completion-timeout = 250
+completion-trigger-len = 2
+default-line-ending = "native"
+editor-config = true
+end-of-line-diagnostics = "disable"
+idle-timeout = 250
+indent-heuristic = "hybrid"
+insert-final-newline = true
+jump-label-alphabet = "abcdefghijklmnopqrstuvwxyz"
+popup-border = "none"
+preview-completion-insert = true
+text-width = 80
+trim-final-newlines = false
+trim-trailing-whitespace = false
+true-color = false
+undercurl = false
 
 [editor.cursor-shape]
 normal = "underline"
