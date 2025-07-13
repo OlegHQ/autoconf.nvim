@@ -163,6 +163,74 @@ M.auto_completion = function(value)
         logger.resolver_success("editor.auto-completion", "disabled")
     end
 end
+M.auto_pairs = function(value)
+    -- Validate that the value is a boolean or table
+    if type(value) ~= "boolean" and type(value) ~= "table" then
+        logger.resolver_error("editor.auto-pairs", "must be a boolean or table, got: " .. type(value))
+        return
+    end
+
+    -- Check if nvim-autopairs is available
+    local autopairs_ok, autopairs = pcall(require, "nvim-autopairs")
+    if not autopairs_ok then
+        logger.resolver_error("editor.auto-pairs", "nvim-autopairs not found")
+        return
+    end
+
+    if type(value) == "boolean" then
+        if value then
+            -- Enable with default pairs
+            autopairs.setup{}
+            logger.resolver_success("editor.auto-pairs", "enabled with default pairs")
+        else
+            -- Disable the plugin
+            autopairs.setup{ disable_filetype = { "all" } }
+            logger.resolver_success("editor.auto-pairs", "disabled")
+        end
+    else
+        -- Handle custom pairs from table
+        local custom_pairs = {}
+        for k, v in pairs(value) do
+            custom_pairs[k] = v
+        end
+        autopairs.setup{ pairs = custom_pairs }
+        logger.resolver_success("editor.auto-pairs", "configured with custom pairs")
+    end
+end
+M.auto_pairs = function(value)
+    -- Validate that the value is a boolean or table
+    if type(value) ~= "boolean" and type(value) ~= "table" then
+        logger.resolver_error("editor.auto-pairs", "must be a boolean or table, got: " .. type(value))
+        return
+    end
+
+    -- Check if nvim-autopairs is available
+    local autopairs_ok, autopairs = pcall(require, "nvim-autopairs")
+    if not autopairs_ok then
+        logger.resolver_error("editor.auto-pairs", "nvim-autopairs not found")
+        return
+    end
+
+    if type(value) == "boolean" then
+        if value then
+            -- Enable with default pairs
+            autopairs.setup{}
+            logger.resolver_success("editor.auto-pairs", "enabled with default pairs")
+        else
+            -- Disable the plugin
+            autopairs.setup{ disable_filetype = { "all" } }
+            logger.resolver_success("editor.auto-pairs", "disabled")
+        end
+    else
+        -- Handle custom pairs from table
+        local p = {}
+        for k, v in pairs(value) do
+            p[k] = v
+        end
+        autopairs.setup{ pairs = p }
+        logger.resolver_success("editor.auto-pairs", "configured with custom pairs")
+    end
+end
 
 -- Completion-related functions will be moved here
 return M
