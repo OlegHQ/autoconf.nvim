@@ -136,6 +136,8 @@ M.register_editor_resolvers = function()
 
     -- Auto-completion resolver
     resolvers.define_resolver("editor.auto-completion", completion.auto_completion)
+
+    resolvers.define_resolver("editor.inline-diagnostics", diagnostics.inline_diagnostics)
 end
 
 return M

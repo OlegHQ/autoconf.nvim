@@ -3,11 +3,10 @@ scrolloff = 5
 mouse = true
 default-yank-register = '"'
 middle-click-paste = true
-scroll-lines = 3
+scroll-lines = 10
 cursorline = false
 cursorcolumn = false
 continue-comments = true
-gutters = ["diagnostics", "spacer", "line-numbers", "spacer", "diff"]
 auto-completion = true
 path-completion = true
 auto-format = true
@@ -37,3 +36,104 @@ undercurl = false
 normal = "underline"
 insert = "underline"
 select = "underline"
+
+[editor.statusline]
+left = [
+    "mode",
+    "spinner",
+    "file-name",
+    "read-only-indicator",
+    "file-modification-indicator",
+]
+center = []
+right = ["diagnostics", "selections", "register", "position", "file-encoding"]
+separator = "│"
+mode.normal = "NOR"
+mode.insert = "INS"
+mode.select = "SEL"
+diagnostics = ["warning", "error"]
+workspace-diagnostics = ["warning", "error"]
+
+[editor.lsp]
+enable = true
+display-messages = true
+display-progress-messages = false
+auto-signature-help = true
+display-inlay-hints = false
+display-color-swatches = true
+display-signature-help-docs = true
+snippets = true
+goto-reference-include-declaration = true
+
+
+[editor.file-picker]
+hidden = true
+follow-symlinks = true
+deduplicate-links = true
+parents = true
+ignore = true
+git-ignore = true
+git-global = true
+git-exclude = true
+
+[editor.auto-pairs]
+"(" = ")"
+"{" = "}"
+"[" = "]"
+"'" = "'"
+"\"" = "\""
+"`" = "`"
+"<" = ">"
+
+[editor.auto-save]
+focus-lost = false
+
+[editor.auto-save.after-delay]
+enable = false
+timeout = 3000
+
+[editor.search]
+smart-case = true
+wrap-around = true
+
+[editor.whitespace]
+render = "none"
+
+[editor.whitespace.characters]
+space = "·"
+nbsp = "⍽"
+nnbsp = "␣"
+tab = "→"
+newline = "⏎"
+tabpad = "·"
+
+[editor.indent-guides]
+render = false
+character = "│"
+skip-levels = 0
+
+[editor.gutters]
+layout = ["diagnostics", "spacer", "line-numbers", "spacer", "diff"]
+
+[editor.gutters.line-numbers]
+min-width = 3
+
+# diagnostics, diff, and spacer gutters are unused in config but listed for completeness
+
+[editor.soft-wrap]
+enable = false
+max-wrap = 20
+max-indent-retain = 40
+wrap-indicator = "↪ "
+wrap-at-text-width = false
+
+[editor.smart-tab]
+enable = true
+supersede-menu = false
+
+[editor.inline-diagnostics]
+cursor-line = "disable"
+other-lines = "disable"
+prefix-len = 1
+max-wrap = 20
+max-diagnostics = 10
