@@ -45,9 +45,6 @@ M.register_editor_resolvers = function()
     -- Path completion resolver - Enable path completion
     resolvers.define_resolver("editor.path-completion", completion.path_completion)
 
-    -- Atomic save resolver - Atomic file saving
-    resolvers.define_resolver("editor.atomic-save", base.atomic_save)
-
     -- Auto-info resolver - Display info boxes
     resolvers.define_resolver("editor.auto-info", lsp.auto_info)
 

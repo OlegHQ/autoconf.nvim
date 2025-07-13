@@ -43,39 +43,6 @@ M.scrolloff = function(value)
 end
 
 
-
-
-M.atomic_save = function(value)
-    -- Validate that the value is a boolean
-    if type(value) ~= "boolean" then
-        logger.resolver_error("editor.atomic-save", "must be a boolean, got: " .. type(value))
-        return
-    end
-
-    if value then
-        -- Enable atomic saves using backup files
-        vim.opt.backup = true
-        vim.opt.writebackup = true
-        vim.opt.backupdir = vim.fn.stdpath("cache") .. "/backup"
-
-        -- Create backup directory if it doesn't exist
-        local backup_dir = vim.fn.stdpath("cache") .. "/backup"
-        if vim.fn.isdirectory(backup_dir) == 0 then
-            vim.fn.mkdir(backup_dir, "p")
-        end
-
-        logger.resolver_success("editor.atomic-save", "enabled with backup files")
-    else
-        vim.opt.backup = false
-        vim.opt.writebackup = false
-        logger.resolver_success("editor.atomic-save", "disabled")
-    end
-end
-
-
-
-
-
 M.idle_timeout = function(value)
     -- Validate that the value is a number
     if type(value) ~= "number" then

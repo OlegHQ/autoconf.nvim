@@ -134,11 +134,22 @@ M.text_width = function(value)
         return
     end
 
-    -- Set text width and color column
+    -- Set text width like Helix editor's maximum line length
+    -- Used for :reflow command and soft-wrapping
     vim.opt.textwidth = value
+    
+    -- Set color column to show visual indicator at text width
     vim.opt.colorcolumn = tostring(value)
+    
+    -- Enable soft wrapping at text width (similar to Helix soft-wrap.wrap-at-text-width)
+    vim.opt.wrap = true
+    vim.opt.linebreak = true
+    vim.opt.breakindent = true
+    
+    -- Set wrapping to respect the text width
+    vim.opt.wrapmargin = 0
 
-    logger.resolver_success("editor.text-width", tostring(value) .. " characters")
+    logger.resolver_success("editor.text-width", tostring(value) .. " characters (with visual indicator and soft-wrap)")
 end
 
 -- Formatting-related functions will be moved here
@@ -155,53 +166,82 @@ M.whitespace = function(config)
     -- Handle render option
     local render = config.render
     if render == "all" then
-        -- Show all whitespace types
+        -- Show all whitespace types with Unicode characters from config
         listchars.space = "·"
         listchars.tab = "→·"
-        listchars.nbsp = "⍽"
-        listchars.nnbsp = "␣"
         listchars.eol = "⏎"
         listchars.trail = "·"
     elseif render == "none" then
         -- Disable all whitespace rendering
         vim.o.list = false
+        logger.resolver_success("editor.whitespace", "disabled")
         return
     elseif type(render) == "table" then
         -- Handle specific render settings
         if render.space == "all" then listchars.space = "·" end
         if render.tab == "all" then listchars.tab = "→·" end
-        if render.nbsp == "all" then listchars.nbsp = "⍽" end
-        if render.nnbsp == "all" then listchars.nnbsp = "␣" end
         if render.newline == "all" then listchars.eol = "⏎" end
     end
 
     -- Apply custom characters if provided
     local chars = config.characters
     if type(chars) == "table" then
-        if chars.space then listchars.space = chars.space end
-        if chars.nbsp then listchars.nbsp = chars.nbsp end
-        if chars.nnbsp then listchars.nnbsp = chars.nnbsp end
-        if chars.newline then listchars.eol = chars.newline end
+        if chars.space then
+            listchars.space = chars.space
+            listchars.trail = chars.space  -- Use same character for trailing spaces
+        end
+        if chars.newline then
+            listchars.eol = chars.newline
+        end
         if chars.tab and chars.tabpad then
             listchars.tab = chars.tab .. chars.tabpad
         elseif chars.tab then
-            listchars.tab = chars.tab .. chars.tab
+            listchars.tab = chars.tab .. "·"
         end
-        if chars.space then listchars.trail = chars.space end
+        -- Note: nbsp and nnbsp are not standard listchars options in Neovim
+        -- They would need to be handled differently (e.g., with syntax highlighting)
     end
 
-    -- Build listchars string
-    local listchars_str = ""
+    -- Build listchars string with only valid Neovim listchars options
+    local listchars_parts = {}
+    local valid_keys = {
+        space = true, tab = true, eol = true, trail = true,
+        extends = true, precedes = true, nbsp = true
+    }
+    
     for k, v in pairs(listchars) do
-        listchars_str = listchars_str .. k .. ":" .. v .. ","
+        if valid_keys[k] and type(k) == "string" and type(v) == "string" and k ~= "" and v ~= "" then
+            table.insert(listchars_parts, k .. ":" .. v)
+        end
     end
-    listchars_str = listchars_str:sub(1, -2) -- Remove trailing comma
-
-    -- Apply settings
-    vim.o.listchars = listchars_str
-    vim.o.list = true
-
-    logger.resolver_success("editor.whitespace", "configured")
+    
+    -- Only set listchars if we have valid content
+    if #listchars_parts > 0 then
+        local listchars_str = table.concat(listchars_parts, ",")
+        
+        -- Try to set listchars
+        local success, err = pcall(function()
+            vim.o.listchars = listchars_str
+            vim.o.list = true
+        end)
+        
+        if not success then
+            logger.resolver_error("editor.whitespace", "failed to set listchars '" .. listchars_str .. "': " .. tostring(err))
+            -- Fallback: use basic settings that should always work
+            pcall(function()
+                vim.o.listchars = "tab:>-,trail:~,eol:$"
+                vim.o.list = true
+            end)
+            logger.resolver_success("editor.whitespace", "configured with fallback settings")
+            return
+        end
+        
+        logger.resolver_success("editor.whitespace", "configured with listchars: " .. listchars_str)
+    else
+        -- If no listchars specified, disable list mode
+        vim.o.list = false
+        logger.resolver_success("editor.whitespace", "disabled (no valid listchars)")
+    end
 end
 
 return M

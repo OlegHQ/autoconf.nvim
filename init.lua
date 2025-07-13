@@ -173,7 +173,5 @@ resolvers.register_plugin_dependency("conform.nvim", "Formatting plugin for auto
 resolvers.register_plugin_dependency("cmp-path", "Path completion source for nvim-cmp", "cmp_path")
 resolvers.register_plugin_dependency("bufferline.nvim", "Buffer line/tab display at the top of the editor", "bufferline")
 resolvers.register_plugin_dependency("hop.nvim", "Jump navigation plugin for jump-label functionality", "hop")
-resolvers.register_plugin_dependency("editorconfig-vim", "EditorConfig support for consistent coding styles",
-    "editorconfig")
 resolvers.register_plugin_dependency("lsp_lines", "renders diagnostics using virtual lines on top of the real line of code", "lsp_lines")
 resolvers.register_plugin_dependency("indent-blankline.nvim", " Indent guides for Neovim", "ibl")
