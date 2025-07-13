@@ -7,6 +7,7 @@ local resolvers = require("sys.core.resolvers")
 local base = require("sys.resolvers.editor.base")
 local gutters = require("sys.resolvers.editor.gutters")
 local etc = require("sys.resolvers.editor.etc")
+local statusline = require("sys.resolvers.editor.statusline")
 
 local M = {}
 
@@ -124,7 +125,7 @@ M.register_editor_resolvers = function()
     resolvers.define_resolver("editor.cursor-shape", etc.cursor_shape)
 
     -- Statusline resolver (lualine integration)
-    resolvers.define_resolver("editor.statusline", etc.statusline)
+    resolvers.define_resolver("editor.statusline", statusline.statusline)
 
     -- Auto-completion resolver
     resolvers.define_resolver("editor.auto-completion", etc.auto_completion)
