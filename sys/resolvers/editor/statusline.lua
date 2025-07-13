@@ -11,23 +11,22 @@ local function map_helix_to_lualine_component(element)
         ["diagnostics"] = "diagnostics",
         ["spinner"] = function()
             -- Return a custom function for LSP spinner
-            return function()
-                local clients = vim.lsp.get_clients()
-                if #clients > 0 then
-                    return "⠋" -- Simple spinner character
-                end
-                return ""
+            local clients = vim.lsp.get_clients()
+            if #clients > 0 then
+                return "⠋" -- Simple spinner character
             end
+            return ""
         end,
         ["selections"] = function()
             -- Return a custom function for selection count
-            return function()
-                local mode = vim.fn.mode()
-                if mode == "v" or mode == "V" or mode == "\22" then
-                    return "SEL"
+            local mode = vim.fn.mode()
+            if mode == "v" or mode == "V" or mode == "\22" then
+                local count = vim.fn.wordcount().visual_chars
+                if count and count > 0 then
+                    return tostring(count)
                 end
-                return ""
             end
+            return ""
         end,
         ["progress"] = "progress",
         ["branch"] = "branch",
@@ -76,7 +75,28 @@ M.statusline = function(value)
     -- Map Helix statusline sections to lualine sections
     if value.left and type(value.left) == "table" then
         for _, element in ipairs(value.left) do
-            local component = map_helix_to_lualine_component(element)
+            local component
+            if element == "mode" and value.mode then
+                component = {
+                    "mode",
+                    fmt = function(str)
+                        local key
+                        if str == "NORMAL" then
+                            key = "normal"
+                        elseif str == "INSERT" or str == "REPLACE" then
+                            key = "insert"
+                        elseif str:find("VISUAL") or str:find("SELECT") then
+                            key = "select"
+                        end
+                        if key and value.mode[key] then
+                            return value.mode[key]
+                        end
+                        return str
+                    end,
+                }
+            else
+                component = map_helix_to_lualine_component(element)
+            end
             if #lualine_config.sections.lualine_a == 0 then
                 table.insert(lualine_config.sections.lualine_a, component)
             else
