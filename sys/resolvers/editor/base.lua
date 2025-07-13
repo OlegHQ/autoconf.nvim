@@ -120,4 +120,44 @@ end
 
 
 
+M.auto_save = function(config)
+    -- Validate config structure
+    if type(config) ~= "table" then
+        logger.resolver_error("editor.auto-save", "must be a table, got: " .. type(config))
+        return
+    end
+
+    -- Clear any existing auto-save autocmds
+    vim.api.nvim_clear_autocmds({ pattern = "*", event = { "FocusLost", "CursorHold" } })
+
+    -- Handle focus-lost auto-save
+    local focus_lost = config["focus-lost"]
+    if type(focus_lost) == "boolean" and focus_lost then
+        vim.api.nvim_create_autocmd("FocusLost", {
+            pattern = "*",
+            callback = function()
+                vim.cmd("silent! wall")
+            end,
+            desc = "Auto-save on focus lost"
+        })
+    end
+
+    -- Handle after-delay auto-save
+    local after_delay = config["after-delay"]
+    if type(after_delay) == "table" and after_delay.enable then
+        local timeout = tonumber(after_delay.timeout) or 3000
+        vim.api.nvim_create_autocmd("CursorHold", {
+            pattern = "*",
+            callback = function()
+                vim.cmd("silent! update")
+            end,
+            desc = "Auto-save after delay",
+            group = vim.api.nvim_create_augroup("AutoSaveAfterDelay", { clear = true })
+        })
+        vim.opt.updatetime = timeout
+    end
+
+    logger.resolver_success("editor.auto-save", "configured")
+end
+
 return M

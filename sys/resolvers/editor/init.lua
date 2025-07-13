@@ -140,6 +140,7 @@ M.register_editor_resolvers = function()
     resolvers.define_resolver("editor.auto-pairs", completion.auto_pairs)
     resolvers.define_resolver("editor.whitespace", formatting.whitespace)
     resolvers.define_resolver("editor.soft-wrap", ui.soft_wrap)
+    resolvers.define_resolver("editor.auto-save", base.auto_save)
 
     resolvers.define_resolver("editor.inline-diagnostics", diagnostics.inline_diagnostics)
 end
