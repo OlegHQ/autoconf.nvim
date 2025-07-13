@@ -1,7 +1,7 @@
 local M = {}
 
 -- Import logger
-local logger = require("sys.logger")
+local logger = require("sys.core.logger")
 
 -- Registry to store resolvers
 M.resolvers = {}
@@ -60,7 +60,7 @@ end
 -- Function to attempt keymap binding
 function M.attempt_to_keymap(keys, mode, command)
     local key_path = "keys." .. mode .. "." .. keys
-    
+
     -- First check if the command has a command resolver
     if not M.has_command_resolver(command) then
         M.keymap_status[key_path] = {
@@ -73,7 +73,7 @@ function M.attempt_to_keymap(keys, mode, command)
         logger.keymap_error(key_path, "Command '" .. command .. "' has no command resolver")
         return false
     end
-    
+
     -- Map Helix mode names to Neovim mode names
     local mode_map = {
         normal = "n",
@@ -83,18 +83,18 @@ function M.attempt_to_keymap(keys, mode, command)
         command = "c",
         terminal = "t"
     }
-    
+
     local nvim_mode = mode_map[mode] or mode
-    
+
     -- Get the command function from the command resolver
     local command_resolver = M.get_command_resolver(command)
     local command_function = command_resolver()
-    
+
     -- Try to set the keymap
     local success, err = pcall(function()
         vim.keymap.set(nvim_mode, keys, command_function, { desc = "Helix keymap: " .. command })
     end)
-    
+
     -- Store the result
     M.keymap_status[key_path] = {
         resolved = success,
@@ -104,13 +104,13 @@ function M.attempt_to_keymap(keys, mode, command)
         nvim_mode = nvim_mode,
         command = command
     }
-    
+
     if success then
         logger.keymap_success(key_path, command)
     else
         logger.keymap_error(key_path, tostring(err))
     end
-    
+
     return success
 end
 
@@ -210,7 +210,7 @@ function M.check_plugin_status(plugin_name)
     if not dependency then
         return nil
     end
-    
+
     return {
         name = dependency.name,
         description = dependency.description,
@@ -219,40 +219,33 @@ function M.check_plugin_status(plugin_name)
     }
 end
 
--- Load resolver implementations from separate file
-local resolvers_impl = require("sys.resolvers_impl")
-
--- Initialize all resolver implementations
-resolvers_impl.init_resolvers(M)
-
-
 -- Debug function to show resolver lookup process
 function M.debug_resolver_lookup(path, value)
     if not logger.is_debug_enabled() then return end
-    
+
     -- Split the path into parts
     local parts = {}
     for part in path:gmatch("[^%.]+") do
         table.insert(parts, part)
     end
-    
+
     -- Create paths_tried table for the logger
     local paths_tried = {}
     for i = #parts, 1, -1 do
         local current_path = table.concat(parts, ".", 1, i)
         local has_resolver = M.has_resolver(current_path)
-        
+
         table.insert(paths_tried, {
             path = current_path,
             found = has_resolver,
             direct = i == #parts
         })
-        
+
         if has_resolver then
             break
         end
     end
-    
+
     logger.debug_resolver_lookup(path, paths_tried)
 end
 
@@ -263,7 +256,7 @@ function M.would_be_resolved(full_path)
     if M.is_keymap_path(full_path) then
         local mode = full_path:match("^keys%.(%w+)%.")
         local keys = full_path:match("^keys%.%w+%.(.+)$")
-        
+
         if mode and keys then
             -- For keymaps, check if the command has a resolver
             -- We can't easily check this without the actual command value
@@ -272,13 +265,13 @@ function M.would_be_resolved(full_path)
         end
         return false
     end
-    
+
     -- Split the path into parts
     local parts = {}
     for part in full_path:gmatch("[^%.]+") do
         table.insert(parts, part)
     end
-    
+
     -- Try resolvers from most specific to least specific
     for i = #parts, 1, -1 do
         local current_path = table.concat(parts, ".", 1, i)
@@ -286,10 +279,8 @@ function M.would_be_resolved(full_path)
             return true, current_path
         end
     end
-    
+
     return false, nil
 end
-
-
 
 return M

@@ -2,11 +2,12 @@
 local config_path = vim.fn.stdpath("config")
 package.path = package.path .. ";" .. config_path .. "/?.lua;" .. config_path .. "/?/init.lua"
 
-local loader = require("sys.loader")
-local resolvers = require("sys.resolvers")
+local loader = require("sys.core.loader")
+local resolvers = require("sys.core.resolvers")
 local commands = require("sys.commands")
-local default_config = require("sys.default_config")
-local logger = require("sys.logger")
+local defaults = require("sys.defaults")
+local logger = require("sys.core.logger")
+local resolver_implementations = require("sys.resolvers")
 
 -- Setup logger command
 logger.setup_debug_command()
@@ -17,7 +18,7 @@ local config_path = "config.toml"
 -- Deep merge function to merge user config with defaults
 local function deep_merge(default, override)
     local result = {}
-    
+
     -- Copy all values from default
     for key, value in pairs(default) do
         if type(value) == "table" then
@@ -26,7 +27,7 @@ local function deep_merge(default, override)
             result[key] = value
         end
     end
-    
+
     -- Override with values from override table
     for key, value in pairs(override) do
         if type(value) == "table" and type(result[key]) == "table" then
@@ -35,22 +36,22 @@ local function deep_merge(default, override)
             result[key] = value
         end
     end
-    
+
     return result
 end
 
 -- Helper function to build nested table from path parts and value
 local function build_nested_table(path_parts, value, start_index)
     start_index = start_index or 1
-    
+
     if start_index > #path_parts then
         return value
     end
-    
+
     local result = {}
     local current_key = path_parts[start_index]
     result[current_key] = build_nested_table(path_parts, value, start_index + 1)
-    
+
     return result
 end
 
@@ -69,34 +70,34 @@ local function try_resolve_with_fallback(full_path, value, debug)
     if resolvers.is_keymap_path(full_path) then
         local mode = full_path:match("^keys%.(%w+)%.")
         local keys = full_path:match("^keys%.%w+%.(.+)$")
-        
+
         if mode and keys then
             resolvers.attempt_to_keymap(keys, mode, value)
         end
         return true
     end
-    
+
     -- Split the path into parts
     local path_parts = split_path(full_path)
-    
+
     local paths_tried = {}
-    
+
     -- Try resolvers from most specific to least specific
     for i = #path_parts, 1, -1 do
         -- Build the current path to try
         local current_path = table.concat(path_parts, ".", 1, i)
         local has_resolver = resolvers.has_resolver(current_path)
-        
+
         table.insert(paths_tried, {
             path = current_path,
             found = has_resolver,
             direct = i == #path_parts
         })
-        
+
         -- Check if there's a resolver for this path
         if has_resolver then
             local resolver = resolvers.get_resolver(current_path)
-            
+
             -- If this is the exact path, use the original value
             if i == #path_parts then
                 resolver(value)
@@ -106,14 +107,14 @@ local function try_resolve_with_fallback(full_path, value, debug)
                 resolver(nested_value)
                 logger.resolver_fallback(full_path, current_path)
             end
-            
+
             if debug then
                 logger.debug_resolver_lookup(full_path, paths_tried)
             end
             return true
         end
     end
-    
+
     if debug then
         logger.debug_resolver_lookup(full_path, paths_tried)
     end
@@ -122,10 +123,10 @@ end
 
 function resolve_configs(config, prefix, debug)
     prefix = prefix or ""
-    
+
     for key, value in pairs(config) do
         local full_key = prefix == "" and key or (prefix .. "." .. key)
-        
+
         if type(value) == "table" then
             -- First try to resolve this path as a whole (in case there's a resolver that handles nested configs)
             if not try_resolve_with_fallback(full_key, value, debug) then
@@ -149,9 +150,12 @@ end
 logger.config_loaded(config_path)
 
 -- Merge default config with user config (user config overrides defaults)
-local config = deep_merge(default_config.default_config, user_config)
+local config = deep_merge(defaults.default_config, user_config)
 
--- Pretty print the parsed config
+
+-- Initialize resolvers
+resolver_implementations.initalize_resolvers()
+
 resolve_configs(config, nil, false)
 
 -- Setup commands
@@ -169,4 +173,5 @@ resolvers.register_plugin_dependency("conform.nvim", "Formatting plugin for auto
 resolvers.register_plugin_dependency("cmp-path", "Path completion source for nvim-cmp", "cmp_path")
 resolvers.register_plugin_dependency("bufferline.nvim", "Buffer line/tab display at the top of the editor", "bufferline")
 resolvers.register_plugin_dependency("hop.nvim", "Jump navigation plugin for jump-label functionality", "hop")
-resolvers.register_plugin_dependency("editorconfig-vim", "EditorConfig support for consistent coding styles", "editorconfig")
+resolvers.register_plugin_dependency("editorconfig-vim", "EditorConfig support for consistent coding styles",
+    "editorconfig")
