@@ -53,9 +53,60 @@ M.statusline = function(value)
     -- Default lualine configuration
     local lualine_config = {
         options = {
-            theme = 'auto',
+            theme = {
+                normal = {
+                    a = { bg = 'none', fg = 'none' },
+                    b = { bg = 'none', fg = 'none' },
+                    c = { bg = 'none', fg = 'none' },
+                    x = { bg = 'none', fg = 'none' },
+                    y = { bg = 'none', fg = 'none' },
+                    z = { bg = 'none', fg = 'none' },
+                },
+                insert = {
+                    a = { bg = 'none', fg = 'none' },
+                    b = { bg = 'none', fg = 'none' },
+                    c = { bg = 'none', fg = 'none' },
+                    x = { bg = 'none', fg = 'none' },
+                    y = { bg = 'none', fg = 'none' },
+                    z = { bg = 'none', fg = 'none' },
+                },
+                visual = {
+                    a = { bg = 'none', fg = 'none' },
+                    b = { bg = 'none', fg = 'none' },
+                    c = { bg = 'none', fg = 'none' },
+                    x = { bg = 'none', fg = 'none' },
+                    y = { bg = 'none', fg = 'none' },
+                    z = { bg = 'none', fg = 'none' },
+                },
+                replace = {
+                    a = { bg = 'none', fg = 'none' },
+                    b = { bg = 'none', fg = 'none' },
+                    c = { bg = 'none', fg = 'none' },
+                    x = { bg = 'none', fg = 'none' },
+                    y = { bg = 'none', fg = 'none' },
+                    z = { bg = 'none', fg = 'none' },
+                },
+                command = {
+                    a = { bg = 'none', fg = 'none' },
+                    b = { bg = 'none', fg = 'none' },
+                    c = { bg = 'none', fg = 'none' },
+                    x = { bg = 'none', fg = 'none' },
+                    y = { bg = 'none', fg = 'none' },
+                    z = { bg = 'none', fg = 'none' },
+                },
+                inactive = {
+                    a = { bg = 'none', fg = 'none' },
+                    b = { bg = 'none', fg = 'none' },
+                    c = { bg = 'none', fg = 'none' },
+                    x = { bg = 'none', fg = 'none' },
+                    y = { bg = 'none', fg = 'none' },
+                    z = { bg = 'none', fg = 'none' },
+                },
+            },
             component_separators = { left = '', right = '' },
             section_separators = { left = '', right = '' },
+            globalstatus = true,
+            padding = 0,
         },
         sections = {
             lualine_a = {},
@@ -79,6 +130,7 @@ M.statusline = function(value)
             if element == "mode" and value.mode then
                 component = {
                     "mode",
+                    padding = { left = 0, right = 3 },
                     fmt = function(str)
                         local key
                         if str == "NORMAL" then
