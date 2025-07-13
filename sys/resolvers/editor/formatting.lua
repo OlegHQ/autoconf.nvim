@@ -142,4 +142,66 @@ M.text_width = function(value)
 end
 
 -- Formatting-related functions will be moved here
+M.whitespace = function(config)
+    -- Validate config structure
+    if type(config) ~= "table" then
+        logger.resolver_error("editor.whitespace", "must be a table, got: " .. type(config))
+        return
+    end
+
+    -- Initialize listchars components
+    local listchars = {}
+
+    -- Handle render option
+    local render = config.render
+    if render == "all" then
+        -- Show all whitespace types
+        listchars.space = "·"
+        listchars.tab = "→·"
+        listchars.nbsp = "⍽"
+        listchars.nnbsp = "␣"
+        listchars.eol = "⏎"
+        listchars.trail = "·"
+    elseif render == "none" then
+        -- Disable all whitespace rendering
+        vim.o.list = false
+        return
+    elseif type(render) == "table" then
+        -- Handle specific render settings
+        if render.space == "all" then listchars.space = "·" end
+        if render.tab == "all" then listchars.tab = "→·" end
+        if render.nbsp == "all" then listchars.nbsp = "⍽" end
+        if render.nnbsp == "all" then listchars.nnbsp = "␣" end
+        if render.newline == "all" then listchars.eol = "⏎" end
+    end
+
+    -- Apply custom characters if provided
+    local chars = config.characters
+    if type(chars) == "table" then
+        if chars.space then listchars.space = chars.space end
+        if chars.nbsp then listchars.nbsp = chars.nbsp end
+        if chars.nnbsp then listchars.nnbsp = chars.nnbsp end
+        if chars.newline then listchars.eol = chars.newline end
+        if chars.tab and chars.tabpad then
+            listchars.tab = chars.tab .. chars.tabpad
+        elseif chars.tab then
+            listchars.tab = chars.tab .. chars.tab
+        end
+        if chars.space then listchars.trail = chars.space end
+    end
+
+    -- Build listchars string
+    local listchars_str = ""
+    for k, v in pairs(listchars) do
+        listchars_str = listchars_str .. k .. ":" .. v .. ","
+    end
+    listchars_str = listchars_str:sub(1, -2) -- Remove trailing comma
+
+    -- Apply settings
+    vim.o.listchars = listchars_str
+    vim.o.list = true
+
+    logger.resolver_success("editor.whitespace", "configured")
+end
+
 return M

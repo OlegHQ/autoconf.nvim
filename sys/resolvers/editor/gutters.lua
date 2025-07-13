@@ -127,10 +127,16 @@ end
 
 
 local function gutters(value)
-    -- Validate that the value is a table (array)
+    -- Validate that the value is a table
     if type(value) ~= "table" then
-        logger.resolver_error("editor.gutters", "must be a table/array, got: " .. type(value))
+        logger.resolver_error("editor.gutters", "must be a table, got: " .. type(value))
         return
+    end
+
+    -- Handle both direct array and config format
+    local gutters_array = value
+    if value.layout then
+        gutters_array = value.layout
     end
 
     -- Parse gutter configuration
@@ -138,7 +144,7 @@ local function gutters(value)
     local want_line_numbers = false
     local want_diff = false
 
-    for _, gutter in ipairs(value) do
+    for _, gutter in ipairs(gutters_array) do
         if gutter == "diagnostics" then
             want_diagnostics = true
         elseif gutter == "line-numbers" then

@@ -176,3 +176,4 @@ resolvers.register_plugin_dependency("hop.nvim", "Jump navigation plugin for jum
 resolvers.register_plugin_dependency("editorconfig-vim", "EditorConfig support for consistent coding styles",
     "editorconfig")
 resolvers.register_plugin_dependency("lsp_lines", "renders diagnostics using virtual lines on top of the real line of code", "lsp_lines")
+resolvers.register_plugin_dependency("indent-blankline.nvim", " Indent guides for Neovim", "ibl")

@@ -136,7 +136,10 @@ M.register_editor_resolvers = function()
 
     -- Auto-completion resolver
     resolvers.define_resolver("editor.auto-completion", completion.auto_completion)
+    resolvers.define_resolver("editor.indent-guides", ui.indent_guides)
     resolvers.define_resolver("editor.auto-pairs", completion.auto_pairs)
+    resolvers.define_resolver("editor.whitespace", formatting.whitespace)
+    resolvers.define_resolver("editor.soft-wrap", ui.soft_wrap)
 
     resolvers.define_resolver("editor.inline-diagnostics", diagnostics.inline_diagnostics)
 end
