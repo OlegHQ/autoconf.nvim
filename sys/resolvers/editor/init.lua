@@ -142,6 +142,17 @@ M.register_editor_resolvers = function()
 
     resolvers.define_resolver("editor.inline-diagnostics", diagnostics.inline_diagnostics)
     resolvers.define_resolver("editor.file-picker", filepicker.filepicker)
+
+    -- LSP resolvers
+    resolvers.define_resolver("editor.lsp.enable", lsp.enable)
+    resolvers.define_resolver("editor.lsp.display-messages", lsp.display_messages)
+    resolvers.define_resolver("editor.lsp.display-progress-messages", lsp.display_progress_messages)
+    resolvers.define_resolver("editor.lsp.auto-signature-help", lsp.auto_signature_help)
+    resolvers.define_resolver("editor.lsp.display-inlay-hints", lsp.display_inlay_hints)
+    resolvers.define_resolver("editor.lsp.display-signature-help-docs", lsp.display_signature_help_docs)
+    resolvers.define_resolver("editor.lsp.snippets", lsp.snippets)
+    resolvers.define_resolver("editor.lsp.goto-reference-include-declaration", lsp.goto_reference_include_declaration)
+    resolvers.define_resolver("editor.lsp.display-color-swatches", lsp.display_color_swatches)
 end
 
 return M
