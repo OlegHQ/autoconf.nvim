@@ -153,8 +153,6 @@ M.completion_trigger_len = function(value)
     end
 end
 
-
-
 M.auto_completion = function(value)
     if value then
         -- Register completion-related dependencies
@@ -163,6 +161,7 @@ M.auto_completion = function(value)
         logger.resolver_success("editor.auto-completion", "disabled")
     end
 end
+
 M.auto_pairs = function(value)
     -- Validate that the value is a boolean or table
     if type(value) ~= "boolean" and type(value) ~= "table" then
@@ -180,11 +179,11 @@ M.auto_pairs = function(value)
     if type(value) == "boolean" then
         if value then
             -- Enable with default pairs
-            autopairs.setup{}
+            autopairs.setup {}
             logger.resolver_success("editor.auto-pairs", "enabled with default pairs")
         else
             -- Disable the plugin
-            autopairs.setup{ disable_filetype = { "all" } }
+            autopairs.setup { disable_filetype = { "all" } }
             logger.resolver_success("editor.auto-pairs", "disabled")
         end
     else
@@ -193,7 +192,7 @@ M.auto_pairs = function(value)
         for k, v in pairs(value) do
             custom_pairs[k] = v
         end
-        autopairs.setup{ pairs = custom_pairs }
+        autopairs.setup { pairs = custom_pairs }
         logger.resolver_success("editor.auto-pairs", "configured with custom pairs")
     end
 end
@@ -214,11 +213,11 @@ M.auto_pairs = function(value)
     if type(value) == "boolean" then
         if value then
             -- Enable with default pairs
-            autopairs.setup{}
+            autopairs.setup {}
             logger.resolver_success("editor.auto-pairs", "enabled with default pairs")
         else
             -- Disable the plugin
-            autopairs.setup{ disable_filetype = { "all" } }
+            autopairs.setup { disable_filetype = { "all" } }
             logger.resolver_success("editor.auto-pairs", "disabled")
         end
     else
@@ -227,7 +226,7 @@ M.auto_pairs = function(value)
         for k, v in pairs(value) do
             p[k] = v
         end
-        autopairs.setup{ pairs = p }
+        autopairs.setup { pairs = p }
         logger.resolver_success("editor.auto-pairs", "configured with custom pairs")
     end
 end

@@ -106,11 +106,6 @@ M.default_config = {
             }
         },
         
-        search = {
-            ["smart-case"] = true,
-            ["wrap-around"] = true
-        },
-        
         whitespace = {
             render = "none",
             characters = {
@@ -143,11 +138,6 @@ M.default_config = {
             ["max-indent-retain"] = 40,
             ["wrap-indicator"] = "↪ ",
             ["wrap-at-text-width"] = false
-        },
-        
-        ["smart-tab"] = {
-            enable = true,
-            ["supersede-menu"] = false
         },
         
         ["inline-diagnostics"] = {
