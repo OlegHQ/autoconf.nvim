@@ -15,6 +15,7 @@ local completion = require("sys.resolvers.editor.completion")
 local ui = require("sys.resolvers.editor.ui")
 local diagnostics = require("sys.resolvers.editor.diagnostics")
 local lsp = require("sys.resolvers.editor.lsp")
+local filepicker = require("sys.resolvers.editor.filepicker")
 
 local M = {}
 
@@ -140,6 +141,7 @@ M.register_editor_resolvers = function()
     resolvers.define_resolver("editor.auto-save", base.auto_save)
 
     resolvers.define_resolver("editor.inline-diagnostics", diagnostics.inline_diagnostics)
+    resolvers.define_resolver("editor.file-picker", filepicker.filepicker)
 end
 
 return M
