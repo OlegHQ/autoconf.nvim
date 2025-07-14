@@ -135,10 +135,16 @@ M.statusline = function(value)
                         local key
                         if str == "NORMAL" then
                             key = "normal"
-                        elseif str == "INSERT" or str == "REPLACE" then
+                        elseif str == "INSERT" then
                             key = "insert"
+                        elseif str == "REPLACE" then
+                            key = "replace"
                         elseif str:find("VISUAL") or str:find("SELECT") then
                             key = "select"
+                        elseif str == "COMMAND" then
+                            key = "command"
+                        elseif str == "TERMINAL" then
+                            key = "terminal"
                         end
                         if key and value.mode[key] then
                             return value.mode[key]

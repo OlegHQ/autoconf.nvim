@@ -37,122 +37,126 @@ M.default_config = {
         ["end-of-line-diagnostics"] = "disable",
         ["editor-config"] = true,
         
-    --     ["clipboard-provider"] = {
-    --         -- Leave empty to use platform default (or specify: "termcode", "x-clip", etc.)
-    --     },
+        ["clipboard-provider"] = {
+            -- Leave empty to use platform default (or specify: "termcode", "x-clip", etc.)
+        },
         
-    --     statusline = {
-    --         left = {"mode", "spinner", "file-name", "read-only-indicator", "file-modification-indicator"},
-    --         center = {},
-    --         right = {"diagnostics", "selections", "register", "position", "file-encoding"},
-    --         separator = "│",
-    --         mode = {
-    --             normal = "NOR",
-    --             insert = "INS",
-    --             select = "SEL"
-    --         },
-    --         diagnostics = {"warning", "error"},
-    --         ["workspace-diagnostics"] = {"warning", "error"}
-    --     },
+        statusline = {
+            left = {"mode", "spinner", "file-name", "read-only-indicator", "file-modification-indicator"},
+            center = {},
+            right = {"diagnostics", "selections", "register", "position", "file-encoding"},
+            separator = "│",
+            mode = {
+                normal = "NOR",
+                insert = "INS",
+                select = "SEL",
+                command = "CMD",
+                visual = "VIS",
+                replace = "REP",
+                terminal = "TER"
+            },
+            diagnostics = {"warning", "error"},
+            ["workspace-diagnostics"] = {"warning", "error"}
+        },
         
-    --     lsp = {
-    --         enable = true,
-    --         ["display-messages"] = true,
-    --         ["display-progress-messages"] = false,
-    --         ["auto-signature-help"] = true,
-    --         ["display-inlay-hints"] = false,
-    --         ["display-color-swatches"] = true,
-    --         ["display-signature-help-docs"] = true,
-    --         snippets = true,
-    --         ["goto-reference-include-declaration"] = true
-    --     },
+        lsp = {
+            enable = true,
+            ["display-messages"] = true,
+            ["display-progress-messages"] = false,
+            ["auto-signature-help"] = true,
+            ["display-inlay-hints"] = false,
+            ["display-color-swatches"] = true,
+            ["display-signature-help-docs"] = true,
+            snippets = true,
+            ["goto-reference-include-declaration"] = true
+        },
         
-    --     ["cursor-shape"] = {
-    --         normal = "block",
-    --         insert = "block",
-    --         select = "block"
-    --     },
+        ["cursor-shape"] = {
+            normal = "block",
+            insert = "block",
+            select = "block"
+        },
         
-    --     ["file-picker"] = {
-    --         hidden = true,
-    --         ["follow-symlinks"] = true,
-    --         ["deduplicate-links"] = true,
-    --         parents = true,
-    --         ignore = true,
-    --         ["git-ignore"] = true,
-    --         ["git-global"] = true,
-    --         ["git-exclude"] = true
-    --     },
+        ["file-picker"] = {
+            hidden = true,
+            ["follow-symlinks"] = true,
+            ["deduplicate-links"] = true,
+            parents = true,
+            ignore = true,
+            ["git-ignore"] = true,
+            ["git-global"] = true,
+            ["git-exclude"] = true
+        },
         
-    --     ["auto-pairs"] = {
-    --         ["("] = ")",
-    --         ["{"] = "}",
-    --         ["["] = "]",
-    --         ["'"] = "'",
-    --         ['"'] = '"',
-    --         ["`"] = "`",
-    --         ["<"] = ">"
-    --     },
+        ["auto-pairs"] = {
+            ["("] = ")",
+            ["{"] = "}",
+            ["["] = "]",
+            ["'"] = "'",
+            ['"'] = '"',
+            ["`"] = "`",
+            ["<"] = ">"
+        },
         
-    --     ["auto-save"] = {
-    --         ["focus-lost"] = false,
-    --         ["after-delay"] = {
-    --             enable = false,
-    --             timeout = 3000
-    --         }
-    --     },
+        ["auto-save"] = {
+            ["focus-lost"] = false,
+            ["after-delay"] = {
+                enable = false,
+                timeout = 3000
+            }
+        },
         
-    --     search = {
-    --         ["smart-case"] = true,
-    --         ["wrap-around"] = true
-    --     },
+        search = {
+            ["smart-case"] = true,
+            ["wrap-around"] = true
+        },
         
-    --     whitespace = {
-    --         render = "none",
-    --         characters = {
-    --             space = "·",
-    --             nbsp = "⍽",
-    --             nnbsp = "␣",
-    --             tab = "→",
-    --             newline = "⏎",
-    --             tabpad = "·"
-    --         }
-    --     },
+        whitespace = {
+            render = "none",
+            characters = {
+                space = "·",
+                nbsp = "⍽",
+                nnbsp = "␣",
+                tab = "→",
+                newline = "⏎",
+                tabpad = "·"
+            }
+        },
         
-    --     ["indent-guides"] = {
-    --         render = false,
-    --         character = "│",
-    --         ["skip-levels"] = 0
-    --     },
+        ["indent-guides"] = {
+            render = false,
+            character = "│",
+            ["skip-levels"] = 0
+        },
         
-    --     gutters = {
-    --         layout = {"diagnostics", "spacer", "line-numbers", "spacer", "diff"},
-    --         ["line-numbers"] = {
-    --             ["min-width"] = 3
-    --         }
-    --         -- diagnostics, diff, and spacer gutters are unused in config but listed for completeness
-    --     },
+        gutters = {
+            layout = {"diagnostics", "spacer", "line-numbers", "spacer", "diff"},
+            ["line-numbers"] = {
+                ["min-width"] = 3
+            }
+            -- diagnostics, diff, and spacer gutters are unused in config but listed for completeness
+        },
         
-    --     ["soft-wrap"] = {
-    --         enable = false,
-    --         ["max-wrap"] = 20,
-    --         ["max-indent-retain"] = 40,
-    --         ["wrap-indicator"] = "↪ ",
-    --         ["wrap-at-text-width"] = false
-    --     },
+        ["soft-wrap"] = {
+            enable = false,
+            ["max-wrap"] = 20,
+            ["max-indent-retain"] = 40,
+            ["wrap-indicator"] = "↪ ",
+            ["wrap-at-text-width"] = false
+        },
         
-    --     ["smart-tab"] = {
-    --         enable = true,
-    --         ["supersede-menu"] = false
-    --     },
+        ["smart-tab"] = {
+            enable = true,
+            ["supersede-menu"] = false
+        },
         
-    --     ["inline-diagnostics"] = {
-    --         ["cursor-line"] = "disable",
-    --         ["other-lines"] = "disable",
-    --         ["prefix-len"] = 1,
-    --         ["max-wrap"] = 20,
-    --         ["max-diagnostics"] = 10
-    --     }
+        ["inline-diagnostics"] = {
+            ["cursor-line"] = "disable",
+            ["other-lines"] = "disable",
+            ["prefix-len"] = 1,
+            ["max-wrap"] = 20,
+            ["max-diagnostics"] = 10
+        }
     }
 }
 
