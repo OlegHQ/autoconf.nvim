@@ -138,9 +138,6 @@ M.text_width = function(value)
     -- Used for :reflow command and soft-wrapping
     vim.opt.textwidth = value
     
-    -- Set color column to show visual indicator at text width
-    vim.opt.colorcolumn = tostring(value)
-    
     -- Enable soft wrapping at text width (similar to Helix soft-wrap.wrap-at-text-width)
     vim.opt.wrap = true
     vim.opt.linebreak = true
