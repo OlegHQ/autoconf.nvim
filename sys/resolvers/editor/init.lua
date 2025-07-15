@@ -153,6 +153,23 @@ M.register_editor_resolvers = function()
     resolvers.define_resolver("editor.lsp.snippets", lsp.snippets)
     resolvers.define_resolver("editor.lsp.goto-reference-include-declaration", lsp.goto_reference_include_declaration)
     resolvers.define_resolver("editor.lsp.display-color-swatches", lsp.display_color_swatches)
+
+    -- From vim
+    resolvers.define_resolver("editor.guicursor", function(value) vim.opt["guicursor"] = value end)
+    resolvers.define_resolver("editor.tabstop", function(value) vim.opt["tabstop"] = value end)
+    resolvers.define_resolver("editor.softtabstop", function(value) vim.opt["softtabstop"] = value end)
+    resolvers.define_resolver("editor.shiftwidth", function(value) vim.opt["shiftwidth"] = value end)
+    resolvers.define_resolver("editor.expandtab", function(value) vim.opt["expandtab"] = value end)
+    resolvers.define_resolver("editor.smartindent", function(value) vim.opt["smartindent"] = value end)
+    resolvers.define_resolver("editor.nu", function(value) vim.opt["nu"] = value end)
+    resolvers.define_resolver("editor.relativenumber", function(value) vim.opt["relativenumber"] = value end)
+    resolvers.define_resolver("editor.undofile", function(value) vim.opt["undofile"] = value end)
+    resolvers.define_resolver("editor.incsearch", function(value) vim.opt["incsearch"] = value end)
+    resolvers.define_resolver("editor.termguicolors", function(value) vim.opt["termguicolors"] = value end)
+    resolvers.define_resolver("editor.backup", function(value) vim.opt["backup"] = value end)
+    resolvers.define_resolver("editor.hlsearch", function(value) vim.opt["hlsearch"] = value end)
+    resolvers.define_resolver("editor.swapfile", function(value) vim.opt["swapfile"] = value end)
+    resolvers.define_resolver("editor.wrap", function(value) vim.opt["wrap"] = value end)
 end
 
 return M

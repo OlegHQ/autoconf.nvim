@@ -120,9 +120,6 @@ function M.keymap_error(key_path, error_msg)
     M.error("Keymap failed: %s -> %s", key_path, error_msg)
 end
 
-function M.config_loaded(config_path)
-    M.info("Configuration loaded from: %s", config_path)
-end
 
 function M.config_error(config_path, error_msg)
     M.error("Failed to load configuration from %s: %s", config_path, error_msg)

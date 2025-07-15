@@ -2,6 +2,22 @@ local M = {}
 
 M.default_config = {
     editor = {
+        guicursor = "", 
+        tabstop = 4, 
+        softtabstop = 4, 
+        shiftwidth = 2, 
+        expandtab = true, 
+        smartindent = true, 
+        nu = true, 
+        relativenumber = true, 
+        undofile = true, 
+        incsearch = true, 
+        termguicolors = true, 
+        backup = false, 
+        hlsearch = false, 
+        swapfile = false, 
+        wrap = false,
+
         scrolloff = 5,
         mouse = true,
         ["default-yank-register"] = '"',

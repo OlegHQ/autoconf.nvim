@@ -27,7 +27,7 @@ local function get_lsp_setup()
     return settings
 end
 
-M.setup_cmp = function()
+local function setup_cmp()
     local cmp_lsp = require("cmp_nvim_lsp")
     local cmp = require("cmp")
 
@@ -89,11 +89,9 @@ M.setup_cmp = function()
         sources = cmp.config.sources({ { name = "nvim_lsp" }, { name = "buffer" } }),
         preselect = false
     })
-
-    return capabilities
 end
 
-M.setup_languages = function(languages)
+local function setup_languages(languages)
     for name, config in pairs(languages) do
         local formatters = config.formatter
         local lsp = config.lsp
@@ -111,9 +109,15 @@ M.setup_languages = function(languages)
     end
 end
 
-M.configure_conform = function()
+local function setup_conform()
     local conform = require("conform")
     return conform.setup({ formatters_by_ft = formatters_by_ft, format_on_save = { timeout_ms = 500, lsp_format = "fallback" }, default_format_opts = { lsp_format = "fallback" } })
+end
+
+M.setup = function(languages)
+    setup_cmp()
+    setup_languages(languages)
+    setup_conform()
 end
 
 return M
