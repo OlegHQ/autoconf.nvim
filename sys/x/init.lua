@@ -96,24 +96,6 @@ do
     s_21("v", "K", ":m '<-2<CR>gv=gv")
     s_21("v", ",", "<Esc>", { noremap = true, silent = true })
 end
-local function configure_languages(languages)
-    local function map_21(t, k, v)
-        return vim.api.nvim_buf_set_keymap(0, t, k, string.format("<cmd>lua %s()<CR>", v),
-            { noremap = true, silent = true })
-    end
-    local capabilities = nil
-    if feature("nvim-cmp") then
-
-    else
-    end
-    if feature("conform") then
-        local conform = require("conform")
-        return conform.setup({ formatters_by_ft = formatters_by_ft, format_on_save = { timeout_ms = 500, lsp_format = "fallback" }, default_format_opts = { lsp_format = "fallback" } })
-    else
-        return nil
-    end
-end
-configure_languages(cfg.languages)
 local function setup_tabs(languages, defaults)
     local tabset_group = vim.api.nvim_create_augroup("tabset", { clear = true })
     for name, c in pairs(languages) do
