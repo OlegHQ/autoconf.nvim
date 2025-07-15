@@ -64,7 +64,7 @@ function M.attempt_to_keymap(keys, mode, command)
     -- Handle both string commands and array commands
     local command_list = {}
     local command_desc = ""
-    
+
     if type(command) == "string" then
         command_list = { command }
         command_desc = command
@@ -132,7 +132,7 @@ function M.attempt_to_keymap(keys, mode, command)
     keys = keys:gsub("([CSA])%-([a-zA-Z])", "<%1-%2>")
 
     print("Attempting to set keymap:", nvim_mode, keys, command_desc)
-    
+
     -- Try to set the keymap
     local success, err = pcall(function()
         vim.keymap.set(nvim_mode, keys, command_function, { desc = "Helix keymap: " .. command_desc })
@@ -171,6 +171,12 @@ end
 -- Function to check if a path is a keymap path
 function M.is_keymap_path(path)
     return path:match("^keys%.%w+%.") ~= nil
+end
+
+function M.match_keymap_mode_keys(full_path)
+    local mode = full_path:match("^keys%.(%w+)%.")
+    local keys = full_path:match("^keys%.%w+%.(.+)$")
+    return mode, keys
 end
 
 -- Function to register a plugin dependency
@@ -297,9 +303,7 @@ end
 function M.would_be_resolved(full_path)
     -- Special handling for keymap paths
     if M.is_keymap_path(full_path) then
-        local mode = full_path:match("^keys%.(%w+)%.")
-        local keys = full_path:match("^keys%.%w+%.(.+)$")
-
+        local mode, keys = M.match_keymap_mode_keys(full_path)
         if mode and keys then
             -- For keymaps, check if the command has a resolver
             -- We can't easily check this without the actual command value

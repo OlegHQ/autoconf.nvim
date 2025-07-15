@@ -56,8 +56,7 @@ end
 local function try_resolve_with_fallback(full_path, value, debug)
     -- Special handling for keymap paths (keys.mode.combo)
     if resolvers.is_keymap_path(full_path) then
-        local mode = full_path:match("^keys%.(%w+)%.")
-        local keys = full_path:match("^keys%.%w+%.(.+)$")
+        local mode, keys = resolvers.match_keymap_mode_keys(full_path)
 
         if mode and keys then
             resolvers.attempt_to_keymap(keys, mode, value)
