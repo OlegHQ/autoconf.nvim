@@ -61,17 +61,41 @@ end
 function M.attempt_to_keymap(keys, mode, command)
     local key_path = "keys." .. mode .. "." .. keys
 
-    -- First check if the command has a command resolver
-    if not M.has_command_resolver(command) then
+    -- Handle both string commands and array commands
+    local command_list = {}
+    local command_desc = ""
+    
+    if type(command) == "string" then
+        command_list = { command }
+        command_desc = command
+    elseif type(command) == "table" then
+        command_list = command
+        command_desc = table.concat(command, " + ")
+    else
         M.keymap_status[key_path] = {
             resolved = false,
-            error = "Command '" .. command .. "' has no command resolver",
+            error = "Command must be a string or array, got " .. type(command),
             keys = keys,
             mode = mode,
             command = command
         }
-        logger.keymap_error(key_path, "Command '" .. command .. "' has no command resolver")
+        logger.keymap_error(key_path, "Command must be a string or array, got " .. type(command))
         return false
+    end
+
+    -- Check if all commands have command resolvers
+    for _, cmd in ipairs(command_list) do
+        if not M.has_command_resolver(cmd) then
+            M.keymap_status[key_path] = {
+                resolved = false,
+                error = "Command '" .. tostring(cmd) .. "' has no command resolver",
+                keys = keys,
+                mode = mode,
+                command = command
+            }
+            logger.keymap_error(key_path, "Command '" .. tostring(cmd) .. "' has no command resolver")
+            return false
+        end
     end
 
     -- Map Helix mode names to Neovim mode names
@@ -86,13 +110,26 @@ function M.attempt_to_keymap(keys, mode, command)
 
     local nvim_mode = mode_map[mode] or mode
 
-    -- Get the command function from the command resolver
-    local command_resolver = M.get_command_resolver(command)
-    local command_function = command_resolver()
+    -- Create a function that executes all commands in sequence
+    local command_function
+    if #command_list == 1 then
+        -- Single command
+        local command_resolver = M.get_command_resolver(command_list[1])
+        command_function = command_resolver()
+    else
+        -- Multiple commands - execute in sequence
+        command_function = function()
+            for _, cmd in ipairs(command_list) do
+                local command_resolver = M.get_command_resolver(cmd)
+                local cmd_function = command_resolver()
+                cmd_function()
+            end
+        end
+    end
 
     -- Try to set the keymap
     local success, err = pcall(function()
-        vim.keymap.set(nvim_mode, keys, command_function, { desc = "Helix keymap: " .. command })
+        vim.keymap.set(nvim_mode, keys, command_function, { desc = "Helix keymap: " .. command_desc })
     end)
 
     -- Store the result
@@ -106,7 +143,7 @@ function M.attempt_to_keymap(keys, mode, command)
     }
 
     if success then
-        logger.keymap_success(key_path, command)
+        logger.keymap_success(key_path, command_desc)
     else
         logger.keymap_error(key_path, tostring(err))
     end

@@ -231,5 +231,4 @@ M.auto_pairs = function(value)
     end
 end
 
--- Completion-related functions will be moved here
 return M

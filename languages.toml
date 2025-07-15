@@ -1,109 +1,100 @@
-# Example Helix languages configuration file
+[language-server.pyright-langserver]
+command = "pyright-langserver"
+args = ["--stdio"]
 
-# [[language]]
-# name = "rust"
-# scope = "source.rust"
-# injection-regex = "rust"
-# file-types = ["rs"]
-# roots = ["Cargo.toml", "Cargo.lock"]
-# auto-format = true
-# comment-token = "//"
-# language-servers = ["rust-analyzer"]
-# indent = { tab-width = 4, unit = "    " }
+[language-server.nil]
+command = "nil"
+args = []
 
-# [[language]]
-# name = "python"
-# scope = "source.python"
-# injection-regex = "python"
-# file-types = ["py", "pyi", "py3", "pyw", "ptl", "rpy", "cpy", "ipy", "pyt"]
-# roots = ["pyproject.toml", "setup.py", "poetry.lock", "requirements.txt", "Pipfile", "tox.ini"]
-# auto-format = true
-# comment-token = "#"
-# language-servers = ["pylsp"]
-# indent = { tab-width = 4, unit = "    " }
+[language-server.ocamllsp]
+command = "ocamllsp"
 
-# [[language]]
-# name = "javascript"
-# scope = "source.js"
-# injection-regex = "(js|javascript)"
-# file-types = ["js", "jsx", "mjs", "cjs"]
-# roots = ["package.json", "tsconfig.json"]
-# auto-format = true
-# comment-token = "//"
-# language-servers = ["typescript-language-server"]
-# indent = { tab-width = 2, unit = "  " }
+[language-server.graphql-lsp]
+command = "graphql-lsp"
+args = ["server", "-m", "stream"]  
 
-# [[language]]
-# name = "typescript"
-# scope = "source.ts"
-# injection-regex = "(ts|typescript)"
-# file-types = ["ts", "tsx"]
-# roots = ["package.json", "tsconfig.json"]
-# auto-format = true
-# comment-token = "//"
-# language-servers = ["typescript-language-server"]
-# indent = { tab-width = 2, unit = "  " }
+[language-server.helm-ls]
+command = "helm_ls"
+args = ["serve"]
 
-# [[language]]
-# name = "lua"
-# scope = "source.lua"
-# injection-regex = "lua"
-# file-types = ["lua"]
-# roots = [".luarc.json", ".luacheckrc", ".stylua.toml", "selene.toml", ".git"]
-# auto-format = true
-# comment-token = "--"
-# language-servers = ["lua-language-server"]
-# indent = { tab-width = 2, unit = "  " }
+[[language]]
+name = "python"
+roots = ["pyproject.toml", "setup.py", "Poetry.lock", ".git"]
+language-servers = ["pyright-langserver"]
+auto-format = true
+formatter = {command = 'black', args = ["--quiet", "-"]}
 
-# [[language]]
-# name = "json"
-# scope = "source.json"
-# injection-regex = "json"
-# file-types = ["json", "jsonc"]
-# auto-format = true
-# language-servers = ["vscode-json-language-server"]
-# indent = { tab-width = 2, unit = "  " }
+[[language]]
+name = "ocaml"
+file-types = ["ml"]
+roots = ["dune-project"]
+language-servers = ["ocamllsp"]
+auto-format = true
+formatter = {command = 'ocamlformat', args = ["-", "--impl"]}
 
-# [[language]]
-# name = "toml"
-# scope = "source.toml"
-# injection-regex = "toml"
-# file-types = ["toml"]
-# auto-format = true
-# comment-token = "#"
-# language-servers = ["taplo"]
-# indent = { tab-width = 2, unit = "  " }
+[[language]]
+name = "nix"
+language-servers = ["nil"]
+auto-format = true
+formatter = {command = 'nixfmt'}
 
-# [[language]]
-# name = "markdown"
-# scope = "source.md"
-# injection-regex = "md|markdown"
-# file-types = ["md", "markdown", "mkd", "mdwn", "mdown", "markdn", "mdtxt", "mdtext", "workbook"]
-# auto-format = true
-# language-servers = ["marksman"]
-# indent = { tab-width = 2, unit = "  " }
+[[language]]
+name = "graphql"
+language-servers = ["graphql-lsp"]
 
-# [language-server.rust-analyzer]
-# command = "rust-analyzer"
+[[language]]
+name = "rust"
+auto-format = false
 
-# [language-server.pylsp]
-# command = "pylsp"
+[[language]]
+name = "go"
 
-# [language-server.typescript-language-server]
-# command = "typescript-language-server"
-# args = ["--stdio"]
+[[language]]
+name = "hcl"
 
-# [language-server.lua-language-server]
-# command = "lua-language-server"
+[[language]]
+name = "tfvars"
 
-# [language-server.vscode-json-language-server]
-# command = "vscode-json-language-server"
-# args = ["--stdio"]
+[[language]]
+name = "html"
+formatter = { command = 'prettier', args = ["--parser", "html"] }
 
-# [language-server.taplo]
-# command = "taplo"
-# args = ["lsp", "stdio"]
 
-# [language-server.marksman]
-# command = "marksman"
-# args = ["server"]
+[[language]]
+name = "javascript"
+formatter = { command = 'prettier', args = ["--parser", "typescript"] }
+auto-format = true
+
+[[language]]
+name = "typescript"
+formatter = { command = 'prettier', args = ["--parser", "typescript"] }
+auto-format = true
+
+[[language]]
+name = "jsx"
+formatter = { command = 'prettier', args = ["--parser", "typescript"] }
+auto-format = true
+
+[[language]]
+name = "tsx"
+formatter = { command = 'prettier', args = ["--parser", "typescript"] }
+auto-format = true
+
+[[language]]
+name = "css"
+formatter = { command = 'prettier', args = ["--parser", "css"] }
+
+
+[[language]]
+name = "json"
+formatter = { command = 'prettier', args = ["--parser", "json"] }
+
+[[language]]
+name = "c"
+auto-format = true
+
+[[language]]
+name = "yaml"
+auto-format = true
+formatter = { command = "prettier", args = ["--parser", "yaml"] }
+language-servers = ["helm-ls"]
