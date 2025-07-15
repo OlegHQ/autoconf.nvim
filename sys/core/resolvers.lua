@@ -135,7 +135,6 @@ function M.attempt_to_keymap(keys, mode, command)
     
     -- Try to set the keymap
     local success, err = pcall(function()
-        print("Setting keymap for", nvim_mode, keys, "->", command_desc)
         vim.keymap.set(nvim_mode, keys, command_function, { desc = "Helix keymap: " .. command_desc })
     end)
 

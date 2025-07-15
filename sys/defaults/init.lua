@@ -167,6 +167,9 @@ M.default_config = {
     keys = {
         ["normal"] = {
             ["C-c"] = "toggle_comments",
+            space = {
+                f = "file_picker"
+            }
         },
         ["visualselect"] = {
             ["C-c"] = "toggle_comments",
