@@ -20,20 +20,8 @@ end
 
 M.init_comment = function()
     local cmt = require("Comment")
-    local api = require("Comment.api")
     cmt.setup()
     vim.keymap.del("n", "gcc")
-    local function _7_()
-        return api.toggle.linewise.current()
-    end
-    vim.keymap.set("n", "<C-c>", _7_)
-    local function _8_()
-        local esc = vim.api.nvim_replace_termcodes("<ESC>", true, false, true)
-        vim.api.nvim_feedkeys(esc, "nx", false)
-        api.locked("toggle.linewise")(vim.fn.visualmode())
-        return vim.cmd("normal! gv")
-    end
-    vim.keymap.set("x", "<C-c>", _8_, { desc = "Comment toggle linewise (visual) and preserve the visual selection" })
 end
 
 M.init_default_keymaps = function()

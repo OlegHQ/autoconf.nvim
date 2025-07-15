@@ -2,20 +2,20 @@ local M = {}
 
 M.default_config = {
     editor = {
-        guicursor = "", 
-        tabstop = 4, 
-        softtabstop = 4, 
-        shiftwidth = 2, 
-        expandtab = true, 
-        smartindent = true, 
-        nu = true, 
-        relativenumber = true, 
-        undofile = true, 
-        incsearch = true, 
-        termguicolors = true, 
-        backup = false, 
-        hlsearch = false, 
-        swapfile = false, 
+        guicursor = "",
+        tabstop = 4,
+        softtabstop = 4,
+        shiftwidth = 2,
+        expandtab = true,
+        smartindent = true,
+        nu = true,
+        relativenumber = true,
+        undofile = true,
+        incsearch = true,
+        termguicolors = true,
+        backup = false,
+        hlsearch = false,
+        swapfile = false,
         wrap = false,
 
         scrolloff = 5,
@@ -52,15 +52,15 @@ M.default_config = {
         ["jump-label-alphabet"] = "abcdefghijklmnopqrstuvwxyz",
         ["end-of-line-diagnostics"] = "disable",
         ["editor-config"] = true,
-        
+
         ["clipboard-provider"] = {
             -- Leave empty to use platform default (or specify: "termcode", "x-clip", etc.)
         },
-        
+
         statusline = {
-            left = {"mode", "spinner", "file-name", "read-only-indicator", "file-modification-indicator"},
+            left = { "mode", "spinner", "file-name", "read-only-indicator", "file-modification-indicator" },
             center = {},
-            right = {"diagnostics", "selections", "register", "position", "file-encoding"},
+            right = { "diagnostics", "selections", "register", "position", "file-encoding" },
             separator = "│",
             mode = {
                 normal = "NOR",
@@ -71,10 +71,10 @@ M.default_config = {
                 replace = "REP",
                 terminal = "TER"
             },
-            diagnostics = {"warning", "error"},
-            ["workspace-diagnostics"] = {"warning", "error"}
+            diagnostics = { "warning", "error" },
+            ["workspace-diagnostics"] = { "warning", "error" }
         },
-        
+
         lsp = {
             enable = true,
             ["display-messages"] = true,
@@ -86,13 +86,13 @@ M.default_config = {
             snippets = true,
             ["goto-reference-include-declaration"] = true
         },
-        
+
         ["cursor-shape"] = {
             normal = "block",
             insert = "block",
             select = "block"
         },
-        
+
         ["file-picker"] = {
             hidden = true,
             ["follow-symlinks"] = true,
@@ -103,7 +103,7 @@ M.default_config = {
             ["git-global"] = true,
             ["git-exclude"] = true
         },
-        
+
         ["auto-pairs"] = {
             ["("] = ")",
             ["{"] = "}",
@@ -113,7 +113,7 @@ M.default_config = {
             ["`"] = "`",
             ["<"] = ">"
         },
-        
+
         ["auto-save"] = {
             ["focus-lost"] = false,
             ["after-delay"] = {
@@ -121,7 +121,7 @@ M.default_config = {
                 timeout = 3000
             }
         },
-        
+
         whitespace = {
             render = "none",
             characters = {
@@ -133,21 +133,21 @@ M.default_config = {
                 tabpad = "·"
             }
         },
-        
+
         ["indent-guides"] = {
             render = false,
             character = "│",
             ["skip-levels"] = 0
         },
-        
+
         gutters = {
-            layout = {"diagnostics", "spacer", "line-numbers", "spacer", "diff"},
+            layout = { "diagnostics", "spacer", "line-numbers", "spacer", "diff" },
             ["line-numbers"] = {
                 ["min-width"] = 3
             }
             -- diagnostics, diff, and spacer gutters are unused in config but listed for completeness
         },
-        
+
         ["soft-wrap"] = {
             enable = false,
             ["max-wrap"] = 20,
@@ -155,13 +155,21 @@ M.default_config = {
             ["wrap-indicator"] = "↪ ",
             ["wrap-at-text-width"] = false
         },
-        
+
         ["inline-diagnostics"] = {
             ["cursor-line"] = "disable",
             ["other-lines"] = "disable",
             ["prefix-len"] = 1,
             ["max-wrap"] = 20,
             ["max-diagnostics"] = 10
+        }
+    },
+    keys = {
+        ["normal"] = {
+            ["C-c"] = "toggle_comments",
+        },
+        ["visualselect"] = {
+            ["C-c"] = "toggle_comments",
         }
     }
 }

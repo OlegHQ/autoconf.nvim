@@ -105,7 +105,8 @@ function M.attempt_to_keymap(keys, mode, command)
         visual = "v",
         select = "s",
         command = "c",
-        terminal = "t"
+        terminal = "t",
+        ["visualselect"] = "x",
     }
 
     local nvim_mode = mode_map[mode] or mode
@@ -115,20 +116,26 @@ function M.attempt_to_keymap(keys, mode, command)
     if #command_list == 1 then
         -- Single command
         local command_resolver = M.get_command_resolver(command_list[1])
-        command_function = command_resolver()
+        command_function = command_resolver(nvim_mode)
     else
         -- Multiple commands - execute in sequence
         command_function = function()
             for _, cmd in ipairs(command_list) do
                 local command_resolver = M.get_command_resolver(cmd)
-                local cmd_function = command_resolver()
+                local cmd_function = command_resolver(nvim_mode)
                 cmd_function()
             end
         end
     end
 
+    -- Convert Helix key combos to Neovim format (C=Control, S=Shift, A=Alt)
+    keys = keys:gsub("([CSA])%-([a-zA-Z])", "<%1-%2>")
+
+    print("Attempting to set keymap:", nvim_mode, keys, command_desc)
+    
     -- Try to set the keymap
     local success, err = pcall(function()
+        print("Setting keymap for", nvim_mode, keys, "->", command_desc)
         vim.keymap.set(nvim_mode, keys, command_function, { desc = "Helix keymap: " .. command_desc })
     end)
 
