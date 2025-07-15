@@ -3,19 +3,23 @@ local M = {}
 
 -- Function to register all command resolvers
 M.register_command_resolvers = function()
+    resolvers.define_command_resolver("file_picker", function(mode)
+        local builtin = require("telescope.builtin")
+        return builtin.find_files, nil
+    end)
     resolvers.define_command_resolver("toggle_comments", function(mode)
         local api = require("Comment.api")
         if mode == "n" then
             return function()
                 return api.toggle.linewise.current()
-            end
+            end, nil
         else
             return function()
                 local esc = vim.api.nvim_replace_termcodes("<ESC>", true, false, true)
                 vim.api.nvim_feedkeys(esc, "nx", false)
                 api.locked("toggle.linewise")(vim.fn.visualmode())
                 return vim.cmd("normal! gv")
-            end
+            end, nil
         end
     end)
 

@@ -28,7 +28,6 @@ M.init_default_keymaps = function()
     local s_21 = vim.keymap.set
     -- if feature("telescope") then
     local builtin = require("telescope.builtin")
-    s_21("n", "<leader>f", builtin.find_files, {})
     s_21("n", "<leader>/", builtin.live_grep, {})
     s_21("n", "<leader>d", ":lua require('telescope.builtin').diagnostics({ bufnr=0 })<CR>",
         { noremap = true, silent = true })

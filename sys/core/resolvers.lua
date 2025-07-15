@@ -58,7 +58,7 @@ function M.has_command_resolver(command_name)
 end
 
 -- Function to attempt keymap binding
-function M.attempt_to_keymap(keys, mode, command)
+function M.attempt_to_keymap(full_path, keys, mode, command, has_space)
     local key_path = "keys." .. mode .. "." .. keys
 
     -- Handle both string commands and array commands
@@ -113,15 +113,16 @@ function M.attempt_to_keymap(keys, mode, command)
 
     -- Create a function that executes all commands in sequence
     local command_function
+    local command_options
     if #command_list == 1 then
         -- Single command
         local command_resolver = M.get_command_resolver(command_list[1])
-        command_function = command_resolver(nvim_mode)
+        command_function, command_options = command_resolver(nvim_mode)
     else
         -- Multiple commands - execute in sequence
         command_function = function()
             for _, cmd in ipairs(command_list) do
-                local command_resolver = M.get_command_resolver(cmd)
+                local command_resolver, _ = M.get_command_resolver(cmd)
                 local cmd_function = command_resolver(nvim_mode)
                 cmd_function()
             end
@@ -130,12 +131,13 @@ function M.attempt_to_keymap(keys, mode, command)
 
     -- Convert Helix key combos to Neovim format (C=Control, S=Shift, A=Alt)
     keys = keys:gsub("([CSA])%-([a-zA-Z])", "<%1-%2>")
-
-    print("Attempting to set keymap:", nvim_mode, keys, command_desc)
+    if has_space then
+        keys = "<leader>" .. keys
+    end
 
     -- Try to set the keymap
     local success, err = pcall(function()
-        vim.keymap.set(nvim_mode, keys, command_function, { desc = "Helix keymap: " .. command_desc })
+        vim.keymap.set(nvim_mode, keys, command_function, command_options or {})
     end)
 
     -- Store the result
@@ -168,15 +170,53 @@ function M.get_keymap_status(key_path)
     return M.keymap_status[key_path]
 end
 
+local function endswith(s, suffix)
+    return s:sub(- #suffix) == suffix
+end
+
+
+local function split(str, sep)
+    local result = {}
+    for part in string.gmatch(str, "([^" .. sep .. "]+)") do
+        table.insert(result, part)
+    end
+    return result
+end
+
+local function hasValue(array, value)
+    for _, v in ipairs(array) do
+        if v == value then
+            return true
+        end
+    end
+    return false
+end
+
 -- Function to check if a path is a keymap path
 function M.is_keymap_path(path)
-    return path:match("^keys%.%w+%.") ~= nil
+    local parts = split(path, ".")
+    if #parts < 3 then
+        return false
+    end
+    if parts[1] ~= "keys" then
+        return false
+    end
+    if parts[#parts] == "space" then
+        return false
+    end
+    return true
 end
 
 function M.match_keymap_mode_keys(full_path)
-    local mode = full_path:match("^keys%.(%w+)%.")
-    local keys = full_path:match("^keys%.%w+%.(.+)$")
-    return mode, keys
+    local parts = split(full_path, ".")
+    local has_space = hasValue(parts, "space")
+    local mode = parts[2]
+    -- last elem
+    local keys = parts[#parts]
+    if has_space then
+        keys = parts[#parts]
+    end
+    return mode, keys, has_space
 end
 
 -- Function to register a plugin dependency
@@ -303,7 +343,7 @@ end
 function M.would_be_resolved(full_path)
     -- Special handling for keymap paths
     if M.is_keymap_path(full_path) then
-        local mode, keys = M.match_keymap_mode_keys(full_path)
+        local mode, keys, _ = M.match_keymap_mode_keys(full_path)
         if mode and keys then
             -- For keymaps, check if the command has a resolver
             -- We can't easily check this without the actual command value
