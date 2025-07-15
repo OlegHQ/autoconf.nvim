@@ -11,6 +11,7 @@ local resolver_implementations = require("sys.resolvers")
 local helpers = require("sys.core.helpers")
 local defaults_lsp = require("sys.defaults.lsp")
 local defaults_base = require("sys.defaults.base")
+local defaults_tabs = require("sys.defaults.tabs")
 
 -- Setup logger command
 logger.setup_debug_command()
@@ -34,7 +35,7 @@ resolvers.register_plugin_dependency("indent-blankline.nvim", " Indent guides fo
 
 -- Path to the TOML config file (update this to your actual config path)
 local config_path = "config.toml"
-
+local languages_path = "languages.toml"
 
 -- Load the TOML config
 local user_config, err = loader.load_config(config_path)
@@ -53,7 +54,19 @@ defaults_base.init_tree_sitter()
 defaults_base.init_comment()
 defaults_base.init_default_keymaps()
 
--- defaults_lsp.setup()
+-- Load the TOML config
+local languages_config, err = loader.load_config(languages_path)
+if not languages_config then
+    logger.config_error(languages_path, err)
+    return
+else
+    local languages = {}
+    for _, language in ipairs(languages_config.language) do
+        languages[language["name"]] = language
+    end
+    defaults_lsp.setup(languages)
+    defaults_tabs.setup_tabs(languages)
+end
 
 -- Initialize resolvers
 resolver_implementations.initalize_resolvers()

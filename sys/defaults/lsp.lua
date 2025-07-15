@@ -102,8 +102,10 @@ local function setup_languages(languages)
         formatters_by_ft[name] = formatters
         -- if (feature("nvim-lspconfig") and lsp) then
         local lspconfig = require("lspconfig")
-        local lspitem = lspconfig[lsp]
-        lspitem.setup(get_lsp_setup())
+        if (type(lsp) == "string") then
+            local lspitem = lspconfig[lsp]
+            lspitem.setup(get_lsp_setup())
+        end
         -- else
         -- end
     end

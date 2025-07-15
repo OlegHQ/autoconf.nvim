@@ -1,100 +1,50 @@
-[language-server.pyright-langserver]
-command = "pyright-langserver"
-args = ["--stdio"]
-
-[language-server.nil]
-command = "nil"
-args = []
-
-[language-server.ocamllsp]
-command = "ocamllsp"
-
-[language-server.graphql-lsp]
-command = "graphql-lsp"
-args = ["server", "-m", "stream"]  
-
-[language-server.helm-ls]
-command = "helm_ls"
-args = ["serve"]
-
 [[language]]
-name = "python"
-roots = ["pyproject.toml", "setup.py", "Poetry.lock", ".git"]
-language-servers = ["pyright-langserver"]
-auto-format = true
-formatter = {command = 'black', args = ["--quiet", "-"]}
-
-[[language]]
-name = "ocaml"
-file-types = ["ml"]
-roots = ["dune-project"]
-language-servers = ["ocamllsp"]
-auto-format = true
-formatter = {command = 'ocamlformat', args = ["-", "--impl"]}
-
-[[language]]
-name = "nix"
-language-servers = ["nil"]
-auto-format = true
-formatter = {command = 'nixfmt'}
-
-[[language]]
-name = "graphql"
-language-servers = ["graphql-lsp"]
-
-[[language]]
-name = "rust"
-auto-format = false
-
-[[language]]
-name = "go"
-
-[[language]]
-name = "hcl"
-
-[[language]]
-name = "tfvars"
-
-[[language]]
-name = "html"
-formatter = { command = 'prettier', args = ["--parser", "html"] }
-
-
-[[language]]
-name = "javascript"
-formatter = { command = 'prettier', args = ["--parser", "typescript"] }
-auto-format = true
-
-[[language]]
-name = "typescript"
-formatter = { command = 'prettier', args = ["--parser", "typescript"] }
-auto-format = true
-
-[[language]]
-name = "jsx"
-formatter = { command = 'prettier', args = ["--parser", "typescript"] }
-auto-format = true
-
-[[language]]
-name = "tsx"
-formatter = { command = 'prettier', args = ["--parser", "typescript"] }
-auto-format = true
-
-[[language]]
-name = "css"
-formatter = { command = 'prettier', args = ["--parser", "css"] }
-
-
-[[language]]
-name = "json"
-formatter = { command = 'prettier', args = ["--parser", "json"] }
+name = "fennel"
 
 [[language]]
 name = "c"
-auto-format = true
 
 [[language]]
-name = "yaml"
-auto-format = true
-formatter = { command = "prettier", args = ["--parser", "yaml"] }
-language-servers = ["helm-ls"]
+formatter = "prettier"
+name = "cucumber"
+
+[[language]]
+name = "swift"
+lsp = "sourcekit"
+formatter = "swiftformat"
+
+[[language]]
+name = "ocaml"
+lsp = "ocamllsp"
+formatter = "ocamlformat"
+
+[[language]]
+lsp = "pyright"
+formatter = "black"
+tab = { width = 4, expand = true }
+name = "python"
+
+[[language]]
+name = "typescript"
+lsp = "ts_ls"
+formatter = "biome"
+tab = { width = 4, expand = false }
+
+[[language]]
+name = "mojo"
+formatter = "mojo_format"
+lsp = "mojo"
+tab = { width = 4, expand = true }
+
+[[language]]
+name = "javascript"
+lsp = "ts_ls"
+formatter = "biome"
+
+[[language]]
+name = "go"
+lsp = "gopls"
+formatter = ["goimports", "gofmt"]
+
+[[language]]
+name = "rust"
