@@ -164,15 +164,38 @@ M.default_config = {
             ["max-diagnostics"] = 10
         }
     },
+
     keys = {
-        ["normal"] = {
+        normal = {
             ["C-c"] = "toggle_comments",
+            [">"] = "indent_right",
+            ["<"] = "indent_left",
+            ["S-U"] = "redo",
             space = {
-                f = "file_picker"
+                f = "file_picker",
+                ["/"] = "global_search",
+                d = "diagnostics_picker",
+                b = "buffer_picker",
+                s = "substitute_word_globally",
+                S = "substitute_word_line",
             }
         },
-        ["visualselect"] = {
+        visual = {
+            [">"] = "indent_right",
+            ["<"] = "indent_left",
+            ["S-R"] = "replace_with_yanked",
+            J = "move_selection_down",
+            K = "move_selection_up",
+            [","] = "visual_escape",
+            space = {
+                Y = "yank_main_selection_to_clipboard"
+            }
+        },
+        visualselect = {
             ["C-c"] = "toggle_comments",
+            space = {
+                p = "paste_over_selection"
+            }
         }
     }
 }
