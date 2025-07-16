@@ -4,6 +4,8 @@ M.init_base = function()
     vim.cmd("set shortmess+=I")
     vim.g.mapleader = " "
     vim.g.maplocalleader = ","
+
+    vim.opt.fillchars:append({ eob = " " })
 end
 
 M.init_tree_sitter = function()

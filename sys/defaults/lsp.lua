@@ -36,37 +36,6 @@ local function setup_cmp()
 
     -- if feature("nvim-cmp") then
     local cmp_select = { behavior = cmp.SelectBehavior.Select }
-    local function _15_(fallback)
-        local function has_words_before()
-            unpack = (unpack or table.unpack)
-            local line, col = unpack(vim.api.nvim_win_get_cursor(0))
-            return ((col ~= 0) and (vim.api.nvim_buf_get_lines(0, (line - 1), line, true)[1]:sub(col, col):match("%s") == nil))
-        end
-        if cmp.visible() then
-            if (#cmp.get_entries() == 1) then
-                return cmp.confirm({ select = true })
-            else
-                return cmp.select_next_item()
-            end
-        elseif has_words_before() then
-            cmp.complete()
-            if (#cmp.get_entries() == 1) then
-                return cmp.confirm({ select = true })
-            else
-                return nil
-            end
-        else
-            return fallback()
-        end
-    end
-
-    local function _19_(fallback)
-        if (cmp.visible() and cmp.get_active_entry()) then
-            return cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = false })
-        else
-            return fallback()
-        end
-    end
 
     cmp.setup({
         confirmation = { completeopt = "menu,menuone,noinsert" },
@@ -74,14 +43,42 @@ local function setup_cmp()
             ["<C-p>"] = cmp.mapping.select_prev_item(cmp_select),
             ["<C-n>"] = cmp.mapping.select_next_item(
                 cmp_select),
-            ["<Tab>"] = cmp.mapping(_15_, { "i", "s" }),
+            ["<Tab>"] = cmp.mapping(function(fallback)
+                local function has_words_before()
+                    unpack = (unpack or table.unpack)
+                    local line, col = unpack(vim.api.nvim_win_get_cursor(0))
+                    return ((col ~= 0) and (vim.api.nvim_buf_get_lines(0, (line - 1), line, true)[1]:sub(col, col):match("%s") == nil))
+                end
+                if cmp.visible() then
+                    if (#cmp.get_entries() == 1) then
+                        return cmp.confirm({ select = true })
+                    else
+                        return cmp.select_next_item()
+                    end
+                elseif has_words_before() then
+                    cmp.complete()
+                    if (#cmp.get_entries() == 1) then
+                        return cmp.confirm({ select = true })
+                    else
+                        return nil
+                    end
+                else
+                    return fallback()
+                end
+            end, { "i", "s" }),
             ["<CR>"] = cmp.mapping({
                 c = cmp.mapping.confirm({
                     behavior =
                         cmp.ConfirmBehavior.Replace,
                     select = true
                 }),
-                i = _19_,
+                i = function(fallback)
+                    if (cmp.visible() and cmp.get_active_entry()) then
+                        return cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = false })
+                    else
+                        return fallback()
+                    end
+                end,
                 s = cmp.mapping.confirm({ select = true })
             }),
             ["<C-Space>"] = cmp.mapping.complete()
@@ -100,14 +97,11 @@ local function setup_languages(languages)
         else
         end
         formatters_by_ft[name] = formatters
-        -- if (feature("nvim-lspconfig") and lsp) then
         local lspconfig = require("lspconfig")
         if (type(lsp) == "string") then
             local lspitem = lspconfig[lsp]
             lspitem.setup(get_lsp_setup())
         end
-        -- else
-        -- end
     end
 end
 

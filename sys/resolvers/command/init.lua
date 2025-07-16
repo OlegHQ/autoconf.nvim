@@ -54,9 +54,9 @@ M.register_command_resolvers = function()
         function(_) return "c", { noremap = true, silent = true } end)
 
     resolvers.define_command_resolver("redo", function(_) return "<C-r>", { noremap = true, silent = true } end)
-resolvers.define_command_resolver("move_selection_down", function(_) return ":m '>+1<CR>gv=gv", nil end)
-resolvers.define_command_resolver("move_selection_up", function(_) return ":m '<-2<CR>gv=gv", nil end)
-resolvers.define_command_resolver("visual_escape", function(_) return "<Esc>", { noremap = true, silent = true } end)
+    resolvers.define_command_resolver("move_selection_down", function(_) return ":m '>+1<CR>gv=gv", nil end)
+    resolvers.define_command_resolver("move_selection_up", function(_) return ":m '<-2<CR>gv=gv", nil end)
+    resolvers.define_command_resolver("visual_escape", function(_) return "<Esc>", { noremap = true, silent = true } end)
 end
 
 return M
