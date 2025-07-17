@@ -14,12 +14,11 @@ M.default_config = {
         hlsearch = false,
         swapfile = false,
         wrap = false,
-
         scrolloff = 5,
-        mouse = true,
+        mouse = false,
         ["default-yank-register"] = '"',
         ["middle-click-paste"] = true,
-        ["scroll-lines"] = 3,
+        ["scroll-lines"] = 8,
         ["line-number"] = "absolute",
         cursorline = false,
         cursorcolumn = false,
@@ -32,7 +31,7 @@ M.default_config = {
         ["preview-completion-insert"] = true,
         ["completion-trigger-len"] = 2,
         ["completion-replace"] = false,
-        ["auto-info"] = true,
+        ["auto-info"] = false,
         ["true-color"] = false,
         undercurl = false,
         rulers = {},
@@ -47,11 +46,7 @@ M.default_config = {
         ["popup-border"] = "none",
         ["indent-heuristic"] = "hybrid",
         ["jump-label-alphabet"] = "abcdefghijklmnopqrstuvwxyz",
-        ["end-of-line-diagnostics"] = "disable",
         ["editor-config"] = true,
-        ["clipboard-provider"] = {
-            -- Leave empty to use platform default (or specify: "termcode", "x-clip", etc.)
-        },
 
         statusline = {
             left = { "mode", "spinner", "file-name", "read-only-indicator", "file-modification-indicator" },
@@ -131,7 +126,7 @@ M.default_config = {
         },
 
         ["indent-guides"] = {
-            render = false,
+            render = true,
             character = "│",
             ["skip-levels"] = 0
         },
@@ -139,9 +134,8 @@ M.default_config = {
         gutters = {
             layout = { "diagnostics", "spacer", "line-numbers", "spacer", "diff" },
             ["line-numbers"] = {
-                ["min-width"] = 3
+                ["min-width"] = 1
             }
-            -- diagnostics, diff, and spacer gutters are unused in config but listed for completeness
         },
 
         ["soft-wrap"] = {
@@ -153,11 +147,8 @@ M.default_config = {
         },
 
         ["inline-diagnostics"] = {
-            ["cursor-line"] = "disable",
-            ["other-lines"] = "disable",
-            ["prefix-len"] = 1,
-            ["max-wrap"] = 20,
-            ["max-diagnostics"] = 10
+            enabled = true,
+            ["only-current-line"] = true
         }
     },
 

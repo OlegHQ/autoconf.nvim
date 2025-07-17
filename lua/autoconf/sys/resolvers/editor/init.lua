@@ -73,9 +73,6 @@ M.register_editor_resolvers = function()
     -- Editor config resolver - Support for .editorconfig files
     resolvers.define_resolver("editor.editor-config", ui.editor_config)
 
-    -- End of line diagnostics resolver - Diagnostics at end of line
-    resolvers.define_resolver("editor.end-of-line-diagnostics", diagnostics.end_of_line_diagnostics)
-
     -- Idle timeout resolver - Time before idle timers trigger
     resolvers.define_resolver("editor.idle-timeout", base.idle_timeout)
 

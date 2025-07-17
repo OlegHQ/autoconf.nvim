@@ -151,6 +151,7 @@ M.indent_guides = function(value)
             indent = {
                 char = character,
             },
+            scope = { enabled = false },
         }
 
         ibl.setup(config)
