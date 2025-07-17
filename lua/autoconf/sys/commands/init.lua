@@ -1,7 +1,7 @@
 local M = {}
 
 -- Import logger
-local logger = require("sys.core.logger")
+local logger = require("autoconf.sys.core.logger")
 
 -- Function to collect all config keys recursively
 local function collect_config_keys(config, prefix, keys)
@@ -208,8 +208,8 @@ end
 -- Function to create the HelixHealth command
 function M.setup_helix_health_command()
     vim.api.nvim_create_user_command('HelixHealth', function()
-        local loader = require("sys.core.loader")
-        local resolvers = require("sys.core.resolvers")
+        local loader = require("autoconf.sys.core.loader")
+        local resolvers = require("autoconf.sys.core.resolvers")
         
         -- Load the config
         local config_path = "config.toml"

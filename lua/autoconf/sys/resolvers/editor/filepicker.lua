@@ -1,4 +1,4 @@
-local logger = require("sys.core.logger")
+local logger = require("autoconf.sys.core.logger")
 
 local default_excludes = { ".git", "node_modules", ".hg", ".svn" }
 

@@ -3,19 +3,19 @@
 
 -- Import logger
 
-local resolvers = require("sys.core.resolvers")
-local base = require("sys.resolvers.editor.base")
-local gutters = require("sys.resolvers.editor.gutters")
-local statusline = require("sys.resolvers.editor.statusline")
-local registers = require("sys.resolvers.editor.registers")
-local scrolling = require("sys.resolvers.editor.scrolling")
-local formatting = require("sys.resolvers.editor.formatting")
-local appearance = require("sys.resolvers.editor.appearance")
-local completion = require("sys.resolvers.editor.completion")
-local ui = require("sys.resolvers.editor.ui")
-local diagnostics = require("sys.resolvers.editor.diagnostics")
-local lsp = require("sys.resolvers.editor.lsp")
-local filepicker = require("sys.resolvers.editor.filepicker")
+local resolvers = require("autoconf.sys.core.resolvers")
+local base = require("autoconf.sys.resolvers.editor.base")
+local gutters = require("autoconf.sys.resolvers.editor.gutters")
+local statusline = require("autoconf.sys.resolvers.editor.statusline")
+local registers = require("autoconf.sys.resolvers.editor.registers")
+local scrolling = require("autoconf.sys.resolvers.editor.scrolling")
+local formatting = require("autoconf.sys.resolvers.editor.formatting")
+local appearance = require("autoconf.sys.resolvers.editor.appearance")
+local completion = require("autoconf.sys.resolvers.editor.completion")
+local ui = require("autoconf.sys.resolvers.editor.ui")
+local diagnostics = require("autoconf.sys.resolvers.editor.diagnostics")
+local lsp = require("autoconf.sys.resolvers.editor.lsp")
+local filepicker = require("autoconf.sys.resolvers.editor.filepicker")
 
 local M = {}
 

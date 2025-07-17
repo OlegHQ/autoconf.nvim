@@ -1,5 +1,5 @@
-local logger = require("sys.core.logger")
-local resolvers = require("sys.core.resolvers")
+local logger = require("autoconf.sys.core.logger")
+local resolvers = require("autoconf.sys.core.resolvers")
 
 local M = {}
 

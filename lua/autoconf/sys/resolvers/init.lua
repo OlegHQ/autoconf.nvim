@@ -2,8 +2,8 @@
 -- This file contains all the actual resolver functions that handle specific configuration paths
 
 -- Import logger
-local editor = require("sys.resolvers.editor")
-local command = require("sys.resolvers.command")
+local editor = require("autoconf.sys.resolvers.editor")
+local command = require("autoconf.sys.resolvers.command")
 
 return {
     initalize_resolvers = function()

@@ -1,4 +1,4 @@
-local resolvers = require("sys.core.resolvers")
+local resolvers = require("autoconf.sys.core.resolvers")
 local M = {}
 
 -- Function to register all command resolvers

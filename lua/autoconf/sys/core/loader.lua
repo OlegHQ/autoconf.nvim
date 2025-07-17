@@ -1,4 +1,4 @@
-local toml = require("toml")
+local toml = require("autoconf.toml")
 
 local M = {}
 

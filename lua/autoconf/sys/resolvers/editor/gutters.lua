@@ -1,5 +1,5 @@
-local resolvers = require("sys.core.resolvers")
-local logger = require("sys.core.logger")
+local resolvers = require("autoconf.sys.core.resolvers")
+local logger = require("autoconf.sys.core.logger")
 -- Individual gutter resolvers for indexed gutter entries
 -- These handle editor.gutters.1, editor.gutters.2, etc.
 local gutter_config = {

@@ -1,4 +1,4 @@
-local logger = require("sys.core.logger")
+local logger = require("autoconf.sys.core.logger")
 local M = {}
 
 M.end_of_line_diagnostics = function(value)

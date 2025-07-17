@@ -1,7 +1,7 @@
 local M = {}
 
 -- Import logger
-local logger = require("sys.core.logger")
+local logger = require("autoconf.sys.core.logger")
 
 -- Registry to store resolvers
 M.resolvers = {}
