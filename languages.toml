@@ -1,0 +1,50 @@
+[[language]]
+name = "fennel"
+
+[[language]]
+name = "c"
+
+[[language]]
+formatter = "prettier"
+name = "cucumber"
+
+[[language]]
+name = "swift"
+lsp = "sourcekit"
+formatter = "swiftformat"
+
+[[language]]
+name = "ocaml"
+lsp = "ocamllsp"
+formatter = "ocamlformat"
+
+[[language]]
+lsp = "pyright"
+formatter = "black"
+tab = { width = 4, expand = true }
+name = "python"
+
+[[language]]
+name = "typescript"
+lsp = "ts_ls"
+formatter = "biome"
+tab = { width = 4, expand = false }
+
+[[language]]
+name = "mojo"
+formatter = "mojo_format"
+lsp = "mojo"
+tab = { width = 4, expand = true }
+
+[[language]]
+name = "javascript"
+lsp = "ts_ls"
+formatter = "biome"
+
+[[language]]
+name = "go"
+lsp = "gopls"
+formatter = ["goimports", "gofmt"]
+
+[[language]]
+name = "rust"
