@@ -1,165 +1,131 @@
-# Neovim Configuration
+# autoconf.nvim
 
-A modern, feature-rich Neovim configuration written in Fennel, using the power of Lua and Neovim's native capabilities.
+A Neovim plugin that provides Helix-like configuration capabilities, allowing you to manage your editor configuration through TOML files and apply custom keymaps.
 
 ## Features
 
-- 🎨 Beautiful UI with Catppuccin Latte theme
-- 🔍 Telescope integration for fuzzy finding
-- 📝 LSP support for multiple languages
-- 🎯 Code completion with nvim-cmp
-- 🌳 Tree-sitter integration for better syntax highlighting
-- 💬 Comment.nvim for easy code commenting
-- 📊 Git integration with gitsigns
-- 🎨 Conform.nvim for code formatting
-
-## Prerequisites
-
-- Neovim 0.9.0 or higher
-- [Hotpot.nvim](https://github.com/rktjmp/hotpot.nvim) for Fennel compilation
-- Git
-- A Nerd Font (recommended for icons)
+- **TOML-based Configuration**: Manage your Neovim settings through `config.toml` and `languages.toml`
+- **Custom Keymaps**: Define and apply custom keybindings in a Helix-like style
+- **Plugin Management**: Automatic handling of plugin dependencies
+- **Modular Architecture**: Easily extendable with custom resolvers and commands
+- **Editor Integration**: Seamless integration with Neovim's native features and plugins
 
 ## Installation
 
-1. Clone this repository:
-```bash
-git clone <your-repo-url> ~/.config/nvim
+1. Clone this repository into your Neovim configuration directory:
+
+   ```bash
+   git clone https://github.com/your-repo/neovim-helix-configurator ~/.config/nvim
+   ```
+
+2. Install the required plugins using your preferred plugin manager.
+
+3. Create your `config.toml` and `languages.toml` files in the `.config/nvim` directory.
+
+## Configuration
+
+### config.toml
+
+The main configuration file where you can define:
+
+- Editor settings
+- Keybindings
+- Plugin configurations
+- Custom commands
+
+Example:
+
+```toml
+[editor]
+line_number = true
+cursorline = true
+theme = "onedark"
+
+[keys.normal]
+"gd" = "goto_definition"
+"gr" = "goto_reference"
 ```
 
-2. Install required plugins manually:
+### languages.toml
 
-```bash
-# Create plugins directory
-mkdir -p ~/.local/share/nvim/site/pack/plugins/start
+Language-specific configurations including:
 
-# Install Hotpot.nvim (required for Fennel compilation)
-git clone https://github.com/rktjmp/hotpot.nvim ~/.local/share/nvim/site/pack/plugins/start/hotpot.nvim
+- LSP settings
+- Formatting options
+- Syntax highlighting
 
-# Install Treesitter
-git clone https://github.com/nvim-treesitter/nvim-treesitter ~/.local/share/nvim/site/pack/plugins/start/nvim-treesitter
+Example:
 
-# Install Telescope and its dependencies
-git clone https://github.com/nvim-lua/plenary.nvim ~/.local/share/nvim/site/pack/plugins/start/plenary.nvim
-git clone https://github.com/nvim-telescope/telescope.nvim ~/.local/share/nvim/site/pack/plugins/start/telescope.nvim
+```toml
+[[language]]
+name = "rust"
+lsp = "rust-analyzer"
+formatter = "rustfmt"
 
-# Install LSP
-git clone https://github.com/neovim/nvim-lspconfig ~/.local/share/nvim/site/pack/plugins/start/nvim-lspconfig
-
-# Install Completion
-git clone https://github.com/hrsh7th/nvim-cmp ~/.local/share/nvim/site/pack/plugins/start/nvim-cmp
-git clone https://github.com/hrsh7th/cmp-nvim-lsp ~/.local/share/nvim/site/pack/plugins/start/cmp-nvim-lsp
-
-# Install Comment.nvim
-git clone https://github.com/numToStr/Comment.nvim ~/.local/share/nvim/site/pack/plugins/start/Comment.nvim
-
-# Install Gitsigns
-git clone https://github.com/lewis6991/gitsigns.nvim ~/.local/share/nvim/site/pack/plugins/start/gitsigns.nvim
-
-# Install Conform.nvim
-git clone https://github.com/stevearc/conform.nvim ~/.local/share/nvim/site/pack/plugins/start/conform.nvim
-
-# Install Catppuccin theme
-git clone https://github.com/catppuccin/nvim ~/.local/share/nvim/site/pack/plugins/start/catppuccin
+[[language]]
+name = "python"
+lsp = "pyright"
+formatter = "black"
 ```
 
-3. Update Treesitter parsers:
-```bash
-nvim --headless -c "TSUpdate" -c "quit"
+## Keymap System
+
+The plugin implements a powerful keymap system that:
+
+- Supports multiple modes (normal, insert, visual, etc.)
+- Allows for complex key combinations
+- Provides automatic conversion from Helix-style keybindings to Neovim keymaps
+
+Example keymap configuration:
+
+```toml
+[keys.normal]
+"C-s" = "save"
+"C-f" = "file_picker"
+"S-w" = "window.split"
 ```
 
-## Configuration Structure
+## Plugin Dependencies
 
-The configuration is organized into several key components:
+The plugin requires these dependencies to be installed:
 
-### Core Configuration (`x.fnl`)
+- `lualine.nvim` (Statusline)
+- `nvim-autopairs` (Auto-pairing)
+- `nvim-lspconfig` (LSP configuration)
+- `nvim-cmp` (Completion)
+- `telescope.nvim` (File picker)
+- `nvim-treesitter` (Syntax highlighting)
+- `gitsigns.nvim` (Git integration)
+- `conform.nvim` (Formatting)
+- `bufferline.nvim` (Buffer management)
+- `hop.nvim` (Navigation)
 
-- **Editor Settings**: Basic Neovim settings like tab width, line numbers, and colors
-- **Language Support**: LSP and formatter configurations for various programming languages
-- **Feature Flags**: Toggle specific features on/off
-- **Theme Configuration**: Currently using Catppuccin Latte theme
+## Custom Resolvers
 
-### Language Support
+The plugin supports custom resolvers for:
 
-The configuration includes support for:
-- TypeScript/JavaScript (tsserver + Biome)
-- Python (pyright + Black)
-- Go (gopls + goimports/gofmt)
-- Rust
-- Swift (sourcekit + swiftformat)
-- OCaml (ocamllsp + ocamlformat)
-- And more...
+- Editor settings
+- Keybindings
+- Plugin configurations
+- Language-specific settings
 
-### Key Mappings
+Example resolver implementation:
 
-- `<Space>` as leader key
-- `,` as local leader key
-- Telescope:
-  - `<leader>f` - Find files
-  - `<leader>/` - Live grep
-  - `<leader>d` - Show diagnostics
-  - `<leader>b` - List buffers
-- LSP:
-  - `<leader>k` - Hover documentation
-  - `<leader>r` - Rename symbol
-  - `<leader>a` - Code actions
-  - `<leader>e` - Show diagnostics
-  - `gd` - Go to definition
-  - `gy` - Go to type definition
-  - `gr` - Go to references
-  - `gi` - Go to implementation
-
-## Customization
-
-### Adding New Languages
-
-To add support for a new language, modify the `:languages` table in `x.fnl`:
-
-```fennel
-:languages
-  { :your-language { :lsp "your-lsp-server" :formatter "your-formatter" }}
+```lua
+resolvers.define_resolver("editor.line-number", function(value)
+    vim.opt.number = value
+    vim.opt.relativenumber = value
+end)
 ```
-
-### Enabling/Disabling Features
-
-Features can be toggled in the `:features` table:
-
-```fennel
-:features 
-  { :feature-name true/false }
-```
-
-### Theme Configuration
-
-Themes can be configured in the `:themes` table:
-
-```fennel
-:themes 
-  { :theme-name true/false }
-```
-
-## Production Readiness
-
-This configuration is production-ready with:
-
-- ✅ Stable plugin versions
-- ✅ Comprehensive LSP support
-- ✅ Efficient key mappings
-- ✅ Proper error handling
-- ✅ Performance optimizations
-- ✅ Modular and maintainable code structure
-
-## Troubleshooting
-
-1. **LSP not working**: Ensure the language server is installed on your system
-2. **Treesitter errors**: Run `:TSUpdate` to update parsers
-3. **Plugin issues**: Check if all plugins are properly installed in the correct directory
-4. **Plugin not loading**: Verify the plugin is in the correct directory (`~/.local/share/nvim/site/pack/plugins/start/`)
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create a new branch for your feature
+3. Submit a pull request
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+MIT License - See LICENSE for details
