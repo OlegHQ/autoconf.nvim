@@ -1,21 +1,13 @@
+local resolvers = require("sys.core.resolvers")
+
 local M = {}
 local capabilities = nil
 local formatters_by_ft = {}
 
-local function map_21(t, k, v)
-    return vim.api.nvim_buf_set_keymap(0, t, k, string.format("<cmd>lua %s()<CR>", v),
-        { noremap = true, silent = true })
-end
-
 local function on_attach()
-    map_21("n", "<leader>k", "vim.lsp.buf.hover")
-    map_21("n", "<leader>r", "vim.lsp.buf.rename")
-    map_21("n", "<leader>a", "vim.lsp.buf.code_action")
-    map_21("n", "<leader>e", "vim.diagnostic.open_float")
-    map_21("n", "gd", "vim.lsp.buf.definition")
-    map_21("n", "gy", "vim.lsp.buf.type_definition")
-    map_21("n", "gr", "vim.lsp.buf.references")
-    return map_21("n", "gi", "vim.lsp.buf.implementation")
+    for _, value in ipairs(resolvers.on_lsp_attach_keymaps) do
+        value()
+    end
 end
 
 local function get_lsp_setup()

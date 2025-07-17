@@ -178,6 +178,14 @@ M.default_config = {
                 b = "buffer_picker",
                 s = "substitute_word_globally",
                 S = "substitute_word_line",
+                k = "hover",
+                r = "rename_symbol",
+                a = "code_action",
+                e = "diagnostic_open_float",
+                gd = "goto_definition",
+                gy = "goto_type_definition",
+                gr = "goto_reference",
+                gi = "goto_implementation"
             }
         },
         visual = {

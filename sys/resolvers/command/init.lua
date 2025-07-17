@@ -57,6 +57,61 @@ M.register_command_resolvers = function()
     resolvers.define_command_resolver("move_selection_down", function(_) return ":m '>+1<CR>gv=gv", nil end)
     resolvers.define_command_resolver("move_selection_up", function(_) return ":m '<-2<CR>gv=gv", nil end)
     resolvers.define_command_resolver("visual_escape", function(_) return "<Esc>", { noremap = true, silent = true } end)
+
+
+    local function lsp_cmd(v)
+        return string.format("<cmd>lua %s()<CR>", v)
+    end
+
+    -- lsp commands
+    resolvers.define_command_resolver("hover", function(_)
+        return {
+            on_lsp_attach = true,
+            fn = function(_) return lsp_cmd("vim.lsp.buf.hover") end
+        }, nil
+    end)
+    resolvers.define_command_resolver("rename_symbol", function(_)
+        return {
+            on_lsp_attach = true,
+            fn = function(_) return lsp_cmd("vim.lsp.buf.rename") end
+        }, nil
+    end)
+    resolvers.define_command_resolver("code_action", function(_)
+        return {
+            on_lsp_attach = true,
+            fn = function(_) return lsp_cmd("vim.lsp.buf.code_action") end
+        }, nil
+    end)
+    resolvers.define_command_resolver("diagnostic_open_float", function(_)
+        return {
+            on_lsp_attach = true,
+            fn = function(_) return lsp_cmd("vim.diagnostic.open_float") end
+        }, nil
+    end)
+    resolvers.define_command_resolver("goto_definition", function(_)
+        return {
+            on_lsp_attach = true,
+            fn = function(_) return lsp_cmd("vim.lsp.buf.definition") end
+        }, nil
+    end)
+    resolvers.define_command_resolver("goto_type_definition", function(_)
+        return {
+            on_lsp_attach = true,
+            fn = function(_) return lsp_cmd("vim.lsp.buf.type_definition") end
+        }, nil
+    end)
+    resolvers.define_command_resolver("goto_reference", function(_)
+        return {
+            on_lsp_attach = true,
+            fn = function(_) return lsp_cmd("vim.lsp.buf.references") end
+        }, nil
+    end)
+    resolvers.define_command_resolver("goto_implementation", function(_)
+        return {
+            on_lsp_attach = true,
+            fn = function(_) return lsp_cmd("vim.lsp.buf.implementation") end
+        }, nil
+    end)
 end
 
 return M

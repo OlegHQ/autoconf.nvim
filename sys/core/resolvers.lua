@@ -15,6 +15,8 @@ M.keymap_status = {}
 -- Registry to store plugin dependencies
 M.plugin_dependencies = {}
 
+M.on_lsp_attach_keymaps = {}
+
 -- Function to define a resolver for a specific config path
 function M.define_resolver(config_item_path, resolver_function)
     -- Check if the resolver function is valid
@@ -39,12 +41,15 @@ end
 -- Function to define a command resolver for Helix commands
 function M.define_command_resolver(command_name, resolver_function)
     -- Check if the resolver function is valid
-    if type(resolver_function) ~= "function" then
-        error("Command resolver function must be a valid function")
+    local is_function = type(resolver_function) == "function"
+    local is_table = type(resolver_function) == "table" and type(resolver_function.fn) == "function"
+    if is_function or is_table then
+        -- Register the command resolver
+        M.command_resolvers[command_name] = resolver_function
+        return
     end
 
-    -- Register the command resolver
-    M.command_resolvers[command_name] = resolver_function
+    error("Command resolver function must be a valid function")
 end
 
 -- Function to get a command resolver
@@ -58,7 +63,7 @@ function M.has_command_resolver(command_name)
 end
 
 -- Function to attempt keymap binding
-function M.attempt_to_keymap(full_path, keys, mode, command, has_space)
+function M.attempt_to_keymap(_, keys, mode, command, has_space)
     local key_path = "keys." .. mode .. "." .. keys
 
     -- Handle both string commands and array commands
@@ -112,6 +117,14 @@ function M.attempt_to_keymap(full_path, keys, mode, command, has_space)
     local nvim_mode = mode_map[mode] or mode
 
     -- Create a function that executes all commands in sequence
+    local extract_function = function(command_function)
+        if type(command_function) == "table" then
+            return command_function.fn, command_function
+        elseif type(command_function) == "function" then
+            return command_function, nil
+        end
+    end
+
     local command_function
     local command_options
     if #command_list == 1 then
@@ -124,7 +137,8 @@ function M.attempt_to_keymap(full_path, keys, mode, command, has_space)
             for _, cmd in ipairs(command_list) do
                 local command_resolver, _ = M.get_command_resolver(cmd)
                 local cmd_function = command_resolver(nvim_mode)
-                cmd_function()
+                local fn, _ = extract_function(cmd_function)
+                fn()
             end
         end
     end
@@ -135,28 +149,36 @@ function M.attempt_to_keymap(full_path, keys, mode, command, has_space)
         keys = "<leader>" .. keys
     end
 
-    -- Try to set the keymap
-    local success, err = pcall(function()
-        vim.keymap.set(nvim_mode, keys, command_function, command_options or {})
-    end)
 
-    -- Store the result
-    M.keymap_status[key_path] = {
-        resolved = success,
-        error = err,
-        keys = keys,
-        mode = mode,
-        nvim_mode = nvim_mode,
-        command = command
-    }
+    local fn, opts = extract_function(command_function)
+    local set_keymap_fn = function()
+        local success, err = pcall(function()
+            vim.keymap.set(nvim_mode, keys, fn, command_options or {})
+        end)
 
-    if success then
-        logger.keymap_success(key_path, command_desc)
-    else
-        logger.keymap_error(key_path, tostring(err))
+        -- Store the result
+        M.keymap_status[key_path] = {
+            resolved = success,
+            error = err,
+            keys = keys,
+            mode = mode,
+            nvim_mode = nvim_mode,
+            command = command
+        }
+
+        if success then
+            logger.keymap_success(key_path, command_desc)
+        else
+            logger.keymap_error(key_path, tostring(err))
+        end
+        return success
     end
 
-    return success
+    if opts ~= nil and opts.on_lsp_attach then
+        table.insert(M.on_lsp_attach_keymaps, set_keymap_fn)
+    else
+        set_keymap_fn()
+    end
 end
 
 -- Function to check if a keymap was resolved
@@ -169,11 +191,6 @@ end
 function M.get_keymap_status(key_path)
     return M.keymap_status[key_path]
 end
-
-local function endswith(s, suffix)
-    return s:sub(- #suffix) == suffix
-end
-
 
 local function split(str, sep)
     local result = {}
