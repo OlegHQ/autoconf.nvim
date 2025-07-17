@@ -128,4 +128,7 @@ Contributions are welcome! Please follow these steps:
 
 ## License
 
+## Credits
+
+TOML parsing is provided by [lua-toml](https://github.com/jonstoler/lua-toml) by Jonathan Stoler (Copyright © 2017)
 MIT License - See LICENSE for details
