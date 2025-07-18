@@ -123,7 +123,6 @@ local function rebuild_cursor()
             -- Store shape for each mode in the group (e.g. "n-v-c" becomes "n", "v", "c")
             for mode in modes:gmatch("[^%-]") do
                 existing_shapes[mode] = shape
-                print(string.format("Found existing shape '%s' for mode '%s'", shape, mode))
             end
         end
     end
@@ -140,13 +139,11 @@ local function rebuild_cursor()
             local shape = existing_shapes[mode] or "block"  -- Use existing shape from your config or default to block
             local fallback = "l" .. hl_group  -- lCursorNormal, lCursorInsert, etc.
             table.insert(cursor_entries, string.format("%s:%s-%s/%s", mode, shape, hl_group, fallback))
-            print(string.format("Using shape '%s' for mode '%s' with color '%s'", shape, mode, hl_group))
         end
     end
 
     if #cursor_entries > 0 then
         local new_guicursor = table.concat(cursor_entries, ",")
-        print("Setting guicursor:", new_guicursor)
         vim.opt.guicursor = new_guicursor
     end
 end
@@ -157,7 +154,6 @@ local function apply_cursor_highlights()
     vim.opt.termguicolors = true
 
     for group, hl_attrs in pairs(cursor_highlight_buffer) do
-        print("Applying cursor highlight:", group, vim.inspect(hl_attrs))
         vim.api.nvim_set_hl(0, group, hl_attrs)
         
         -- Also create the corresponding lCursor* fallback group
