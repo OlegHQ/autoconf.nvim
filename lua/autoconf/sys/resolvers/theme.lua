@@ -94,12 +94,77 @@ local function set_cursor_hl(group, attrs, palette)
     end
 end
 
+
+
+local function rebuild_cursor()
+    -- 1️⃣  snapshot current guicursor
+    local current = vim.opt.guicursor:get() -- e.g. { "n-v-c:block", "i:ver25" }
+
+    -- 2️⃣  map modes → new HL groups
+    local hl_map = {
+        n = "CursorNormal",  -- orange (example)
+        i = "CursorInsert",  -- white  (example)
+        v = "CursorVisual",  -- pick your color
+        c = "CursorCommand", -- pick your color
+    }
+
+    -- 3️⃣  rebuild the option, re-using the original shape
+    local rebuilt, seen = {}, {}
+    for _, entry in ipairs(current) do
+        local modes, rest = entry:match("^([^:]+):(.+)$")  -- "n-v-c", "block"
+        local shape, _    = rest:match("^([^%-]+)%-(.+)$") -- "block", "CursorXYZ"
+        shape             = shape or rest                  -- handle "block" (no HL)
+
+        for m in modes:gmatch("[^%-]") do                  -- iterate single letters
+            if hl_map[m] then
+                table.insert(rebuilt, string.format("%s:%s-%s", m, shape, hl_map[m]))
+                seen[m] = true
+            end
+        end
+    end
+
+    -- any mode we care about that wasn’t mentioned? default to block
+    for m, hl in pairs(hl_map) do
+        if not seen[m] then
+            table.insert(rebuilt, string.format("%s:%s-%s", m, "block", hl))
+        end
+    end
+
+    -- Build cursor entries with proper highlight groups
+    local cursor_entries = {}
+
+    -- Only add modes that have highlight groups in buffer
+    for mode, hl_group in pairs(hl_map) do
+        if cursor_highlight_buffer[hl_group] then
+            local shape = (mode == "i") and "ver25" or "block"
+            local fallback = "l" .. hl_group  -- lCursorNormal, lCursorInsert, etc.
+            table.insert(cursor_entries, string.format("%s:%s-%s/%s", mode, shape, hl_group, fallback))
+        end
+    end
+
+    if #cursor_entries > 0 then
+        local new_guicursor = table.concat(cursor_entries, ",")
+        print("Setting guicursor:", new_guicursor)
+        vim.opt.guicursor = new_guicursor
+    end
+end
+
 -- Function to apply all buffered cursor highlights
 local function apply_cursor_highlights()
+    -- Ensure termguicolors is enabled for cursor colors in terminal
+    vim.opt.termguicolors = true
+
     for group, hl_attrs in pairs(cursor_highlight_buffer) do
         print("Applying cursor highlight:", group, vim.inspect(hl_attrs))
         vim.api.nvim_set_hl(0, group, hl_attrs)
+        
+        -- Also create the corresponding lCursor* fallback group
+        local fallback_group = "l" .. group  -- lCursorNormal, lCursorInsert, etc.
+        vim.api.nvim_set_hl(0, fallback_group, hl_attrs)
     end
+
+    -- Set up guicursor BEFORE clearing buffer
+    rebuild_cursor()
 
     -- Clear buffer after applying
     cursor_highlight_buffer = {}
@@ -475,44 +540,6 @@ theme_handlers['hint'] = function(attrs, palette)
     set_hl('DiagnosticHint', attrs, palette)
 end
 
-local function rebuild_cursor()
-    -- 1️⃣  snapshot current guicursor
-    local current = vim.opt.guicursor:get() -- e.g. { "n-v-c:block", "i:ver25" }
-
-    -- 2️⃣  map modes → new HL groups
-    local hl_map = {
-        n = "CursorNormal",  -- orange (example)
-        i = "CursorInsert",  -- white  (example)
-        v = "CursorVisual",  -- pick your color
-        c = "CursorCommand", -- pick your color
-    }
-
-    -- 3️⃣  rebuild the option, re-using the original shape
-    local rebuilt, seen = {}, {}
-    for _, entry in ipairs(current) do
-        local modes, rest = entry:match("^([^:]+):(.+)$")  -- "n-v-c", "block"
-        local shape, _    = rest:match("^([^%-]+)%-(.+)$") -- "block", "CursorXYZ"
-        shape             = shape or rest                  -- handle "block" (no HL)
-
-        for m in modes:gmatch("[^%-]") do                  -- iterate single letters
-            if hl_map[m] then
-                table.insert(rebuilt, string.format("%s:%s-%s", m, shape, hl_map[m]))
-                seen[m] = true
-            end
-        end
-    end
-
-    -- any mode we care about that wasn’t mentioned? default to block
-    for m, hl in pairs(hl_map) do
-        if not seen[m] then
-            table.insert(rebuilt, string.format("%s:%s-%s", m, "block", hl))
-        end
-    end
-
-    print(vim.inspect(rebuilt))
-    -- 4️⃣  apply
-    vim.opt.guicursor = rebuilt
-end
 
 -- Main function that applies the helix theme
 function M.apply_helix_theme(helix_theme)
@@ -593,8 +620,6 @@ function M.apply_helix_theme(helix_theme)
             }
         })
     end
-
-    rebuild_cursor()
 end
 
 -- Function to get list of supported theme keys
