@@ -75,6 +75,7 @@ local function set_cursor_hl(group, attrs, palette)
     end
 
     -- Merge modifiers (accumulate all modifiers)
+    -- NOTE: Skip 'reversed' for cursor highlights as it causes confusing behavior
     if attrs.modifiers then
         for _, mod in ipairs(attrs.modifiers) do
             if mod == 'bold' then
@@ -84,7 +85,9 @@ local function set_cursor_hl(group, attrs, palette)
             elseif mod == 'underlined' then
                 hl_attrs.underline = true
             elseif mod == 'reversed' then
-                hl_attrs.reverse = true
+                -- Skip reversed for cursor highlights - causes confusing color behavior
+                -- In Helix, reversed makes cursor visible, but in Neovim guicursor
+                -- we want bg color to be the actual cursor color
             elseif mod == 'crossed_out' then
                 hl_attrs.strikethrough = true
             elseif mod == 'dim' then
