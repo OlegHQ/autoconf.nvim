@@ -3,6 +3,7 @@ local M = {}
 -- Cache require calls at the top
 local ok_treesitter, treesitter_configs
 local ok_comment, comment
+local ok_lualine = pcall(require, "lualine")
 
 -- Try loading the required modules
 ok_treesitter, treesitter_configs = pcall(require, "nvim-treesitter.configs")
@@ -12,6 +13,11 @@ M.init_base = function()
     vim.cmd("set shortmess+=I")
     vim.g.mapleader = " "
     vim.g.maplocalleader = ","
+
+    -- Hide default mode display if lualine is installed
+    if ok_lualine then
+        vim.opt.showmode = false
+    end
 
     vim.opt.fillchars:append({ eob = " " })
 end
