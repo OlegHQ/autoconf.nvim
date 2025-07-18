@@ -105,43 +105,42 @@ local function rebuild_cursor()
 
     -- 2️⃣  map modes → new HL groups
     local hl_map = {
-        n = "CursorNormal",  -- orange (example)
-        i = "CursorInsert",  -- white  (example)
-        v = "CursorVisual",  -- pick your color
-        c = "CursorCommand", -- pick your color
+        n = "CursorNormal",  -- Normal mode
+        i = "CursorInsert",  -- Insert mode  
+        v = "CursorVisual",  -- Visual mode
+        c = "CursorCommand", -- Command mode
     }
+    
+    -- Parse existing shapes from your current guicursor configuration
+    local existing_shapes = {}  -- Store shapes per mode from your config
 
-    -- 3️⃣  rebuild the option, re-using the original shape
-    local rebuilt, seen = {}, {}
+    -- 3️⃣  Parse existing guicursor to preserve shapes
     for _, entry in ipairs(current) do
         local modes, rest = entry:match("^([^:]+):(.+)$")  -- "n-v-c", "block"
-        local shape, _    = rest:match("^([^%-]+)%-(.+)$") -- "block", "CursorXYZ"
-        shape             = shape or rest                  -- handle "block" (no HL)
-
-        for m in modes:gmatch("[^%-]") do                  -- iterate single letters
-            if hl_map[m] then
-                table.insert(rebuilt, string.format("%s:%s-%s", m, shape, hl_map[m]))
-                seen[m] = true
+        if modes and rest then
+            local shape = rest:match("^([^%-]+)") or rest    -- Extract shape: "block", "ver25", etc.
+            
+            -- Store shape for each mode in the group (e.g. "n-v-c" becomes "n", "v", "c")
+            for mode in modes:gmatch("[^%-]") do
+                existing_shapes[mode] = shape
+                print(string.format("Found existing shape '%s' for mode '%s'", shape, mode))
             end
         end
     end
 
     -- any mode we care about that wasn’t mentioned? default to block
-    for m, hl in pairs(hl_map) do
-        if not seen[m] then
-            table.insert(rebuilt, string.format("%s:%s-%s", m, "block", hl))
-        end
-    end
+
 
     -- Build cursor entries with proper highlight groups
     local cursor_entries = {}
 
-    -- Only add modes that have highlight groups in buffer
+    -- Only add modes that have highlight groups in buffer, preserve existing shapes
     for mode, hl_group in pairs(hl_map) do
         if cursor_highlight_buffer[hl_group] then
-            local shape = (mode == "i") and "ver25" or "block"
+            local shape = existing_shapes[mode] or "block"  -- Use existing shape from your config or default to block
             local fallback = "l" .. hl_group  -- lCursorNormal, lCursorInsert, etc.
             table.insert(cursor_entries, string.format("%s:%s-%s/%s", mode, shape, hl_group, fallback))
+            print(string.format("Using shape '%s' for mode '%s' with color '%s'", shape, mode, hl_group))
         end
     end
 
