@@ -32,7 +32,6 @@ M.default_config = {
         ["completion-trigger-len"] = 2,
         ["completion-replace"] = false,
         ["auto-info"] = false,
-        ["true-color"] = false,
         undercurl = false,
         rulers = {},
         bufferline = "never",
@@ -47,6 +46,7 @@ M.default_config = {
         ["indent-heuristic"] = "hybrid",
         ["jump-label-alphabet"] = "abcdefghijklmnopqrstuvwxyz",
         ["editor-config"] = true,
+        ["true-color"] = true,
 
         statusline = {
             left = { "mode", "spinner", "file-name", "read-only-indicator", "file-modification-indicator" },

@@ -282,4 +282,9 @@ function M.setup_helix_health_command()
     })
 end
 
+function M.setup_theme_check_command()
+    local theme_check = require("autoconf.sys.commands.theme_check")
+    theme_check.setup_command()
+end
+
 return M
