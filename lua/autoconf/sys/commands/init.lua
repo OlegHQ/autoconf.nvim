@@ -205,9 +205,9 @@ local function generate_legend()
     return lines
 end
 
--- Function to create the HelixHealth command
+-- Function to create the AutoconfHealth command
 function M.setup_helix_health_command()
-    vim.api.nvim_create_user_command('HelixHealth', function()
+    vim.api.nvim_create_user_command('AutoconfHealth', function()
         local loader = require("autoconf.sys.core.loader")
         local resolvers = require("autoconf.sys.core.resolvers")
         
@@ -271,11 +271,11 @@ function M.setup_helix_health_command()
         
         -- Open the buffer in the current window (full screen)
         vim.api.nvim_win_set_buf(0, buf)
-        vim.api.nvim_buf_set_name(buf, 'HelixHealth')
+        vim.api.nvim_buf_set_name(buf, 'AutoconfHealth')
         
         -- Set buffer-specific keymaps for easy navigation
-        vim.keymap.set('n', 'q', '<cmd>bdelete<cr>', { buffer = buf, desc = 'Close HelixHealth' })
-        vim.keymap.set('n', '<Esc>', '<cmd>bdelete<cr>', { buffer = buf, desc = 'Close HelixHealth' })
+        vim.keymap.set('n', 'q', '<cmd>bdelete<cr>', { buffer = buf, desc = 'Close AutoconfHealth' })
+        vim.keymap.set('n', '<Esc>', '<cmd>bdelete<cr>', { buffer = buf, desc = 'Close AutoconfHealth' })
         
     end, {
         desc = 'Show Helix configuration health status'

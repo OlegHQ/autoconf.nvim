@@ -157,7 +157,7 @@ end
 
 -- Create vim command to toggle debug mode
 function M.setup_debug_command()
-    vim.api.nvim_create_user_command('HelixDebug', function(opts)
+    vim.api.nvim_create_user_command('AutoconfDebug', function(opts)
         local action = opts.args:lower()
         if action == "on" or action == "enable" then
             M.enable_debug()
