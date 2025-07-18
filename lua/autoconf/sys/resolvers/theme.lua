@@ -106,20 +106,20 @@ local function rebuild_cursor()
     -- 2️⃣  map modes → new HL groups
     local hl_map = {
         n = "CursorNormal",  -- Normal mode
-        i = "CursorInsert",  -- Insert mode  
+        i = "CursorInsert",  -- Insert mode
         v = "CursorVisual",  -- Visual mode
         c = "CursorCommand", -- Command mode
     }
-    
+
     -- Parse existing shapes from your current guicursor configuration
-    local existing_shapes = {}  -- Store shapes per mode from your config
+    local existing_shapes = {} -- Store shapes per mode from your config
 
     -- 3️⃣  Parse existing guicursor to preserve shapes
     for _, entry in ipairs(current) do
-        local modes, rest = entry:match("^([^:]+):(.+)$")  -- "n-v-c", "block"
+        local modes, rest = entry:match("^([^:]+):(.+)$") -- "n-v-c", "block"
         if modes and rest then
-            local shape = rest:match("^([^%-]+)") or rest    -- Extract shape: "block", "ver25", etc.
-            
+            local shape = rest:match("^([^%-]+)") or rest -- Extract shape: "block", "ver25", etc.
+
             -- Store shape for each mode in the group (e.g. "n-v-c" becomes "n", "v", "c")
             for mode in modes:gmatch("[^%-]") do
                 existing_shapes[mode] = shape
@@ -136,8 +136,8 @@ local function rebuild_cursor()
     -- Only add modes that have highlight groups in buffer, preserve existing shapes
     for mode, hl_group in pairs(hl_map) do
         if cursor_highlight_buffer[hl_group] then
-            local shape = existing_shapes[mode] or "block"  -- Use existing shape from your config or default to block
-            local fallback = "l" .. hl_group  -- lCursorNormal, lCursorInsert, etc.
+            local shape = existing_shapes[mode] or "block" -- Use existing shape from your config or default to block
+            local fallback = "l" .. hl_group               -- lCursorNormal, lCursorInsert, etc.
             table.insert(cursor_entries, string.format("%s:%s-%s/%s", mode, shape, hl_group, fallback))
         end
     end
@@ -155,9 +155,9 @@ local function apply_cursor_highlights()
 
     for group, hl_attrs in pairs(cursor_highlight_buffer) do
         vim.api.nvim_set_hl(0, group, hl_attrs)
-        
+
         -- Also create the corresponding lCursor* fallback group
-        local fallback_group = "l" .. group  -- lCursorNormal, lCursorInsert, etc.
+        local fallback_group = "l" .. group -- lCursorNormal, lCursorInsert, etc.
         vim.api.nvim_set_hl(0, fallback_group, hl_attrs)
     end
 
@@ -605,18 +605,20 @@ function M.apply_helix_theme(helix_theme)
     if statusline_attrs and pcall(require, 'lualine') then
         local resolved_fg = statusline_attrs.fg and resolve_color(statusline_attrs.fg, palette)
         local resolved_bg = statusline_attrs.bg and resolve_color(statusline_attrs.bg, palette)
-
-        require('lualine').setup({
-            options = {
-                theme = {
-                    normal = {
-                        a = { fg = resolved_fg, bg = resolved_bg },
-                        b = { fg = resolved_fg, bg = resolved_bg },
-                        c = { fg = resolved_fg, bg = resolved_bg }
+        local ok_lualine, lualine = pcall(require, "lualine")
+        if ok_lualine then
+            lualine.setup({
+                options = {
+                    theme = {
+                        normal = {
+                            a = { fg = resolved_fg, bg = resolved_bg },
+                            b = { fg = resolved_fg, bg = resolved_bg },
+                            c = { fg = resolved_fg, bg = resolved_bg }
+                        }
                     }
                 }
-            }
-        })
+            })
+        end
     end
 end
 

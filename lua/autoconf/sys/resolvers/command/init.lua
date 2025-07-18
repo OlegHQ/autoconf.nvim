@@ -4,28 +4,33 @@ local M = {}
 -- Function to register all command resolvers
 M.register_command_resolvers = function()
     -- File pickers
-    local builtin = require("telescope.builtin")
-    resolvers.define_command_resolver("file_picker", builtin.find_files)
-    resolvers.define_command_resolver("global_search", builtin.live_grep)
-    resolvers.define_command_resolver("buffer_picker", builtin.buffers)
-    resolvers.define_command_resolver("diagnostics_picker", {
-        cmd = ":lua require('telescope.builtin').diagnostics({ bufnr=0 })<CR>",
-        opts = { noremap = true, silent = true }
-    })
+    local ok_builtin, builtin = pcall(require, "telescope.builtin")
 
-    local api = require("Comment.api")
-    resolvers.define_command_resolver("toggle_comments",
-        {
-            per_mode = {
-                n = api.toggle.linewise.current,
-            },
-            fn = function()
-                local esc = vim.api.nvim_replace_termcodes("<ESC>", true, false, true)
-                vim.api.nvim_feedkeys(esc, "nx", false)
-                api.locked("toggle.linewise")(vim.fn.visualmode())
-                return vim.cmd("normal! gv")
-            end
+    if ok_builtin then
+        resolvers.define_command_resolver("file_picker", builtin.find_files)
+        resolvers.define_command_resolver("global_search", builtin.live_grep)
+        resolvers.define_command_resolver("buffer_picker", builtin.buffers)
+        resolvers.define_command_resolver("diagnostics_picker", {
+            cmd = ":lua require('telescope.builtin').diagnostics({ bufnr=0 })<CR>",
+            opts = { noremap = true, silent = true }
         })
+    end
+
+    local ok_comment, api = pcall(require, "Comment.api")
+    if ok_comment then
+        resolvers.define_command_resolver("toggle_comments",
+            {
+                per_mode = {
+                    n = api.toggle.linewise.current,
+                },
+                fn = function()
+                    local esc = vim.api.nvim_replace_termcodes("<ESC>", true, false, true)
+                    vim.api.nvim_feedkeys(esc, "nx", false)
+                    api.locked("toggle.linewise")(vim.fn.visualmode())
+                    return vim.cmd("normal! gv")
+                end
+            })
+    end
     resolvers.define_command_resolver("paste_over_selection", "\"_dP")
     resolvers.define_command_resolver("substitute_word_globally",
         ":%s/\\<<C-r><C-w>\\>/\\<C-r><C-w>/gI<Left><Left><Left>")

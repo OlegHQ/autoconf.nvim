@@ -20,8 +20,11 @@ local function get_lsp_setup()
 end
 
 local function setup_cmp()
-    local cmp_lsp = require("cmp_nvim_lsp")
-    local cmp = require("cmp")
+    local ok_cmp_lsp, cmp_lsp = pcall(require, "cmp_nvim_lsp")
+    local ok_cmp, cmp = pcall(require, "cmp")
+    if not ok_cmp_lsp or not ok_cmp then
+        return
+    end
 
     capabilities = vim.tbl_deep_extend("force", {}, vim.lsp.protocol.make_client_capabilities(),
         cmp_lsp.default_capabilities())
@@ -81,6 +84,10 @@ local function setup_cmp()
 end
 
 local function setup_languages(languages)
+    local ok_lspconfig, lspconfig = pcall(require, "lspconfig")
+    if not ok_lspconfig then
+        return
+    end
     for name, config in pairs(languages) do
         local formatters = config.formatter
         local lsp = config.lsp
@@ -89,7 +96,6 @@ local function setup_languages(languages)
         else
         end
         formatters_by_ft[name] = formatters
-        local lspconfig = require("lspconfig")
         if (type(lsp) == "string") then
             local lspitem = lspconfig[lsp]
             lspitem.setup(get_lsp_setup())
@@ -98,7 +104,11 @@ local function setup_languages(languages)
 end
 
 local function setup_conform()
-    local conform = require("conform")
+    local ok_conform, conform = pcall(require, "conform")
+    if not ok_conform then
+        return
+    end
+
     return conform.setup({ formatters_by_ft = formatters_by_ft, format_on_save = { timeout_ms = 500, lsp_format = "fallback" }, default_format_opts = { lsp_format = "fallback" } })
 end
 

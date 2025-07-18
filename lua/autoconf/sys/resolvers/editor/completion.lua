@@ -108,12 +108,13 @@ M.completion_timeout = function(value)
 
     -- Configure nvim-cmp if available
     local cmp_ok, cmp = pcall(require, "cmp")
-    if cmp_ok then
+    local cmp_types_ok, cmp_types = pcall(require, "cmp.types")
+    if cmp_ok and cmp_types_ok then
         cmp.setup({
             completion = {
                 keyword_length = 1,
                 autocomplete = {
-                    require('cmp.types').cmp.TriggerEvent.TextChanged,
+                    cmp_types.cmp.TriggerEvent.TextChanged,
                 },
             },
             experimental = {
