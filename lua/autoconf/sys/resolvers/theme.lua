@@ -3,22 +3,22 @@ local M = {}
 -- Helper to resolve color from palette or return as-is if it's already a hex value
 local function resolve_color(color, palette)
     if not color then return nil end
-    
+
     -- If it's already a hex color (starts with #), return as-is
     if string.match(color, '^#%x+$') then
         return color
     end
-    
+
     -- Try to resolve from palette
     if palette and palette[color] then
         return palette[color]
     end
-    
+
     -- Return as-is if not found in palette (fallback)
     return color
 end
 
--- Helper to set highlight groups
+-- Helper to set highlight groups using traditional vim commands
 local function set_hl(group, attrs, palette)
     local bg = attrs.bg and 'guibg=' .. resolve_color(attrs.bg, palette) or ''
     local fg = attrs.fg and 'guifg=' .. resolve_color(attrs.fg, palette) or ''
@@ -52,6 +52,57 @@ local function set_hl(group, attrs, palette)
     if style ~= '' then style = 'gui=' .. style end
     local command = string.format('highlight %s %s %s %s', group, style, fg, bg)
     vim.cmd(command)
+end
+
+-- Buffer for cursor highlight groups to merge attributes
+local cursor_highlight_buffer = {}
+
+-- Modern API function specifically for cursor highlights - buffers instead of immediately applying
+local function set_cursor_hl(group, attrs, palette)
+    -- Initialize group buffer if it doesn't exist
+    if not cursor_highlight_buffer[group] then
+        cursor_highlight_buffer[group] = {}
+    end
+
+    local hl_attrs = cursor_highlight_buffer[group]
+
+    -- Merge foreground and background colors (later values override earlier ones)
+    if attrs.fg then
+        hl_attrs.fg = resolve_color(attrs.fg, palette)
+    end
+    if attrs.bg then
+        hl_attrs.bg = resolve_color(attrs.bg, palette)
+    end
+
+    -- Merge modifiers (accumulate all modifiers)
+    if attrs.modifiers then
+        for _, mod in ipairs(attrs.modifiers) do
+            if mod == 'bold' then
+                hl_attrs.bold = true
+            elseif mod == 'italic' then
+                hl_attrs.italic = true
+            elseif mod == 'underlined' then
+                hl_attrs.underline = true
+            elseif mod == 'reversed' then
+                hl_attrs.reverse = true
+            elseif mod == 'crossed_out' then
+                hl_attrs.strikethrough = true
+            elseif mod == 'dim' then
+                hl_attrs.undercurl = true
+            end
+        end
+    end
+end
+
+-- Function to apply all buffered cursor highlights
+local function apply_cursor_highlights()
+    for group, hl_attrs in pairs(cursor_highlight_buffer) do
+        print("Applying cursor highlight:", group, vim.inspect(hl_attrs))
+        vim.api.nvim_set_hl(0, group, hl_attrs)
+    end
+
+    -- Clear buffer after applying
+    cursor_highlight_buffer = {}
 end
 
 -- Theme key handlers - each function handles a specific theme key
@@ -313,29 +364,35 @@ theme_handlers['ui.selection.primary'] = function(attrs, palette)
     set_hl('Visual', attrs, palette)
 end
 
+theme_handlers['ui.cursor'] = function(attrs, palette)
+    set_cursor_hl('CursorNormal', attrs, palette)
+    set_cursor_hl('CursorVisual', attrs, palette)
+    set_cursor_hl('CursorInsert', attrs, palette)
+    set_cursor_hl('CursorCommand', attrs, palette)
+end
+
 theme_handlers['ui.cursor.select'] = function(attrs, palette)
-    set_hl('Cursor', attrs, palette)
+    set_cursor_hl('CursorVisual', attrs, palette)
 end
 
 theme_handlers['ui.cursor.insert'] = function(attrs, palette)
-    set_hl('CursorInsert', attrs, palette)
+    -- Set custom highlight group for insert mode cursor using modern API
+    set_cursor_hl('CursorInsert', attrs, palette)
+end
+
+theme_handlers['ui.cursor.normal'] = function(attrs, palette)
+    set_cursor_hl('CursorNormal', attrs, palette)
 end
 
 theme_handlers['ui.cursor.primary.select'] = function(attrs, palette)
-    set_hl('Cursor', attrs, palette)
+    set_cursor_hl('CursorNormal', attrs, palette)
 end
-
-theme_handlers['ui.cursor.primary.insert'] = function(attrs, palette)
-    set_hl('CursorInsert', attrs, palette)
-end
+theme_handlers['ui.cursor.primary.insert'] = function(attrs, palette) end
 
 theme_handlers['ui.cursor.match'] = function(attrs, palette)
     set_hl('MatchParen', attrs, palette)
 end
 
-theme_handlers['ui.cursor'] = function(attrs, palette)
-    set_hl('Cursor', attrs, palette)
-end
 
 theme_handlers['ui.cursorline.primary'] = function(attrs, palette)
     set_hl('CursorLine', attrs, palette)
@@ -418,6 +475,45 @@ theme_handlers['hint'] = function(attrs, palette)
     set_hl('DiagnosticHint', attrs, palette)
 end
 
+local function rebuild_cursor()
+    -- 1️⃣  snapshot current guicursor
+    local current = vim.opt.guicursor:get() -- e.g. { "n-v-c:block", "i:ver25" }
+
+    -- 2️⃣  map modes → new HL groups
+    local hl_map = {
+        n = "CursorNormal",  -- orange (example)
+        i = "CursorInsert",  -- white  (example)
+        v = "CursorVisual",  -- pick your color
+        c = "CursorCommand", -- pick your color
+    }
+
+    -- 3️⃣  rebuild the option, re-using the original shape
+    local rebuilt, seen = {}, {}
+    for _, entry in ipairs(current) do
+        local modes, rest = entry:match("^([^:]+):(.+)$")  -- "n-v-c", "block"
+        local shape, _    = rest:match("^([^%-]+)%-(.+)$") -- "block", "CursorXYZ"
+        shape             = shape or rest                  -- handle "block" (no HL)
+
+        for m in modes:gmatch("[^%-]") do                  -- iterate single letters
+            if hl_map[m] then
+                table.insert(rebuilt, string.format("%s:%s-%s", m, shape, hl_map[m]))
+                seen[m] = true
+            end
+        end
+    end
+
+    -- any mode we care about that wasn’t mentioned? default to block
+    for m, hl in pairs(hl_map) do
+        if not seen[m] then
+            table.insert(rebuilt, string.format("%s:%s-%s", m, "block", hl))
+        end
+    end
+
+    print(vim.inspect(rebuilt))
+    -- 4️⃣  apply
+    vim.opt.guicursor = rebuilt
+end
+
 -- Main function that applies the helix theme
 function M.apply_helix_theme(helix_theme)
     -- Clear existing highlights
@@ -425,6 +521,7 @@ function M.apply_helix_theme(helix_theme)
     if vim.fn.exists('syntax_on') then vim.cmd('syntax reset') end
     vim.o.background = 'dark'
     vim.g.colors_name = 'helix_theme'
+
 
     -- Extract palette for color resolution
     local palette = helix_theme.palette or {}
@@ -445,6 +542,9 @@ function M.apply_helix_theme(helix_theme)
             end
         end
     end
+
+    -- Apply all buffered cursor highlights with merged attributes
+    apply_cursor_highlights()
 
     -- Handle terminal colors from palette
     if helix_theme.palette then
@@ -478,18 +578,23 @@ function M.apply_helix_theme(helix_theme)
     -- Plugin-specific configuration
     local statusline_attrs = helix_theme['ui.statusline']
     if statusline_attrs and pcall(require, 'lualine') then
+        local resolved_fg = statusline_attrs.fg and resolve_color(statusline_attrs.fg, palette)
+        local resolved_bg = statusline_attrs.bg and resolve_color(statusline_attrs.bg, palette)
+
         require('lualine').setup({
             options = {
                 theme = {
                     normal = {
-                        a = { fg = statusline_attrs.fg, bg = statusline_attrs.bg },
-                        b = { fg = statusline_attrs.fg, bg = statusline_attrs.bg },
-                        c = { fg = statusline_attrs.fg, bg = statusline_attrs.bg }
+                        a = { fg = resolved_fg, bg = resolved_bg },
+                        b = { fg = resolved_fg, bg = resolved_bg },
+                        c = { fg = resolved_fg, bg = resolved_bg }
                     }
                 }
             }
         })
     end
+
+    rebuild_cursor()
 end
 
 -- Function to get list of supported theme keys
