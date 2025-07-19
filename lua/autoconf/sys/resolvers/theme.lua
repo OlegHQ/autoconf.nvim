@@ -561,9 +561,6 @@ function M.apply_helix_theme(helix_theme)
                     attrs = { fg = attrs }
                 end
                 handler(attrs, palette)
-            else
-                -- Log unhandled theme keys for debugging
-                print("Unhandled theme key: " .. theme_key)
             end
         end
     end
