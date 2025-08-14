@@ -9,7 +9,6 @@ local helpers = require("autoconf.sys.core.helpers")
 local defaults_lsp = require("autoconf.sys.defaults.lsp")
 local defaults_base = require("autoconf.sys.defaults.base")
 local defaults_tabs = require("autoconf.sys.defaults.tabs")
-local themes = require("autoconf.sys.core.themes")
 
 local M = {}
 
@@ -33,8 +32,6 @@ function M.init()
     resolvers.register_plugin_dependency("lsp_lines",
         "renders diagnostics using virtual lines on top of the real line of code", "lsp_lines")
     resolvers.register_plugin_dependency("indent-blankline.nvim", " Indent guides for Neovim", "ibl")
-
-    themes.load_all_themes()
 
     -- Path to the TOML config file (update this to your actual config path)
     local config_path = "config.toml"
@@ -76,15 +73,19 @@ function M.init()
 
     -- Setup commands
     commands.setup_helix_health_command()
-    commands.setup_theme_check_command()
 
-    if config.editor and config.editor.theme then
-        local theme_applier = require("autoconf.sys.resolvers.theme")
-        local theme_config = themes.get_theme(config.editor.theme)
-        if theme_config then
-            theme_applier.apply_helix_theme(theme_config)
-        end
-    end
+    -- Late init resolvers
+    helpers.late_init_resolvers()
 end
+
+M.define_resolver = function(path, resolver)
+    resolvers.define_resolver(path, resolver)
+end
+
+M.define_command_resolver = function(name, resolver)
+    resolvers.define_command_resolver(name, resolver)
+end
+
+M.Lifecycle = helpers.Lifecycle
 
 return M

@@ -20,12 +20,12 @@ M.on_lsp_attach_keymaps = {}
 -- Function to define a resolver for a specific config path
 function M.define_resolver(config_item_path, resolver_function)
     -- Check if the resolver function is valid
-    if type(resolver_function) ~= "function" then
-        error("Resolver function must be a valid function")
+    if type(resolver_function) == "function" or type(resolver_function) == "table" then
+        -- Register the resolver for the given config item path
+        M.resolvers[config_item_path] = resolver_function
+        return
     end
-
-    -- Register the resolver for the given config item path
-    M.resolvers[config_item_path] = resolver_function
+    error("Resolver function must be a valid function or table")
 end
 
 -- Function to get a resolver for a specific config path

@@ -52,6 +52,13 @@ local function split_path(path)
     return parts
 end
 
+local late_init_resolvers = {}
+
+M.Lifecycle = {
+    LATE = "LATE",
+    NORMAL = "NORMAL"
+}
+
 -- Smart resolver function with hierarchical fallback
 local function try_resolve_with_fallback(full_path, value, debug)
     -- Special handling for keymap paths (keys.mode.combo)
@@ -69,6 +76,13 @@ local function try_resolve_with_fallback(full_path, value, debug)
 
     local paths_tried = {}
 
+    local function unwrap_resolver(resolver)
+        if type(resolver) == "function" then
+            return resolver, M.Lifecycle.NORMAL
+        end
+        return resolver.resolver, resolver.lifecycle or M.Lifecycle.NORMAL
+    end
+
     -- Try resolvers from most specific to least specific
     for i = #path_parts, 1, -1 do
         -- Build the current path to try
@@ -83,15 +97,31 @@ local function try_resolve_with_fallback(full_path, value, debug)
 
         -- Check if there's a resolver for this path
         if has_resolver then
-            local resolver = resolvers.get_resolver(current_path)
+            local resolver, lifecycle = unwrap_resolver(resolvers.get_resolver(current_path))
 
             -- If this is the exact path, use the original value
             if i == #path_parts then
-                resolver(value)
+                if lifecycle == M.Lifecycle.LATE then
+                    table.insert(late_init_resolvers, {
+                        path = current_path,
+                        resolver = resolver,
+                        value = value
+                    })
+                else
+                    resolver(value)
+                end
             else
                 -- Build nested structure for remaining path parts
                 local nested_value = build_nested_table(path_parts, value, i + 1)
-                resolver(nested_value)
+                if lifecycle == M.Lifecycle.LATE then
+                    table.insert(late_init_resolvers, {
+                        path = current_path,
+                        resolver = resolver,
+                        value = value
+                    })
+                else
+                    resolver(nested_value)
+                end
                 logger.resolver_fallback(full_path, current_path)
             end
 
@@ -106,6 +136,12 @@ local function try_resolve_with_fallback(full_path, value, debug)
         logger.debug_resolver_lookup(full_path, paths_tried)
     end
     return false
+end
+
+M.late_init_resolvers = function()
+    for _, resolver in ipairs(late_init_resolvers) do
+        resolver.resolver(resolver.value)
+    end
 end
 
 M.resolve_configs = function(config, prefix, debug)

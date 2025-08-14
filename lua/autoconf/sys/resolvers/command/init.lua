@@ -79,31 +79,31 @@ M.register_command_resolvers = function()
     })
     resolvers.define_command_resolver("rename_symbol", {
         on_lsp_attach = true,
-        fn = lsp_cmd("vim.lsp.buf.rename")
+        cmd = lsp_cmd("vim.lsp.buf.rename")
     })
     resolvers.define_command_resolver("code_action", {
         on_lsp_attach = true,
-        fn = lsp_cmd("vim.lsp.buf.code_action")
+        cmd = lsp_cmd("vim.lsp.buf.code_action")
     })
     resolvers.define_command_resolver("diagnostic_open_float", {
         on_lsp_attach = true,
-        fn = lsp_cmd("vim.diagnostic.open_float")
+        cmd = lsp_cmd("vim.diagnostic.open_float")
     })
     resolvers.define_command_resolver("goto_definition", {
         on_lsp_attach = true,
-        fn = lsp_cmd("vim.lsp.buf.definition")
+        cmd = lsp_cmd("vim.lsp.buf.definition")
     })
     resolvers.define_command_resolver("goto_type_definition", {
         on_lsp_attach = true,
-        fn = lsp_cmd("vim.lsp.buf.type_definition")
+        cmd = lsp_cmd("vim.lsp.buf.type_definition")
     })
     resolvers.define_command_resolver("goto_reference", {
         on_lsp_attach = true,
-        fn = lsp_cmd("vim.lsp.buf.references")
+        cmd = lsp_cmd("vim.lsp.buf.references")
     })
     resolvers.define_command_resolver("goto_implementation", {
         on_lsp_attach = true,
-        fn = lsp_cmd("vim.lsp.buf.implementation")
+        cmd = lsp_cmd("vim.lsp.buf.implementation")
     })
 end
 

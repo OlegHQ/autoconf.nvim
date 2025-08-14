@@ -7,10 +7,10 @@ local logger = require("autoconf.sys.core.logger")
 local function collect_config_keys(config, prefix, keys)
     prefix = prefix or ""
     keys = keys or {}
-    
+
     for key, value in pairs(config) do
         local full_key = prefix == "" and key or (prefix .. "." .. key)
-        
+
         if type(value) == "table" then
             -- Recursively collect keys from nested tables
             collect_config_keys(value, full_key, keys)
@@ -23,7 +23,7 @@ local function collect_config_keys(config, prefix, keys)
             })
         end
     end
-    
+
     return keys
 end
 
@@ -32,16 +32,16 @@ local function analyze_config_keys(config_keys, resolvers)
     local resolved_count = 0
     local unresolved_count = 0
     local analyzed_keys = {}
-    
+
     for _, item in ipairs(config_keys) do
         local status
         local is_resolved = false
-        
+
         -- Special handling for keymap paths
         if resolvers.is_keymap_path(item.key) then
             is_resolved = resolvers.is_keymap_resolved(item.key)
             status = is_resolved and "✓ KEYMAP RESOLVED" or "✗ KEYMAP FAILED"
-            
+
             -- Add error details if keymap failed
             if not is_resolved then
                 local keymap_status = resolvers.get_keymap_status(item.key)
@@ -53,7 +53,7 @@ local function analyze_config_keys(config_keys, resolvers)
             -- Use hierarchical fallback logic to check if the key would be resolved
             local would_resolve, resolver_path = resolvers.would_be_resolved(item.key)
             is_resolved = would_resolve
-            
+
             if is_resolved then
                 if resolver_path == item.key then
                     status = "✓ RESOLVED (direct)"
@@ -64,28 +64,28 @@ local function analyze_config_keys(config_keys, resolvers)
                 status = "✗ NOT RESOLVED"
             end
         end
-        
+
         local value_str = tostring(item.value)
-        
+
         -- Truncate long values
         if #value_str > 50 then
             value_str = value_str:sub(1, 47) .. "..."
         end
-        
+
         table.insert(analyzed_keys, {
             key = item.key,
             status = status,
             value = value_str,
             resolved = is_resolved
         })
-        
+
         if is_resolved then
             resolved_count = resolved_count + 1
         else
             unresolved_count = unresolved_count + 1
         end
     end
-    
+
     return analyzed_keys, resolved_count, unresolved_count
 end
 
@@ -95,14 +95,14 @@ local function analyze_plugin_dependencies(resolvers)
     local installed_plugins = 0
     local missing_plugins = 0
     local analyzed_plugins = {}
-    
+
     -- Sort plugin names for consistent output
     local plugin_names = {}
     for name, _ in pairs(plugin_dependencies) do
         table.insert(plugin_names, name)
     end
     table.sort(plugin_names)
-    
+
     for _, plugin_name in ipairs(plugin_names) do
         local status = resolvers.check_plugin_status(plugin_name)
         if status then
@@ -112,7 +112,7 @@ local function analyze_plugin_dependencies(resolvers)
                 status = plugin_status,
                 description = status.description
             })
-            
+
             if status.installed then
                 installed_plugins = installed_plugins + 1
             else
@@ -120,7 +120,7 @@ local function analyze_plugin_dependencies(resolvers)
             end
         end
     end
-    
+
     return analyzed_plugins, installed_plugins, missing_plugins, plugin_names
 end
 
@@ -136,7 +136,8 @@ local function generate_header(config_path, total_keys)
 end
 
 -- Function to generate summary section
-local function generate_summary(resolved_count, unresolved_count, total_keys, installed_plugins, missing_plugins, total_plugins)
+local function generate_summary(resolved_count, unresolved_count, total_keys, installed_plugins, missing_plugins,
+                                total_plugins)
     local lines = {}
     table.insert(lines, "## Summary")
     table.insert(lines, "")
@@ -162,11 +163,11 @@ local function generate_config_keys_section(analyzed_keys)
     table.insert(lines, "")
     table.insert(lines, string.format("%-30s %-35s %s", "Configuration Key", "Status", "Value"))
     table.insert(lines, string.rep("-", 80))
-    
+
     for _, item in ipairs(analyzed_keys) do
         table.insert(lines, string.format("%-30s %-35s %s", item.key, item.status, item.value))
     end
-    
+
     table.insert(lines, "")
     return lines
 end
@@ -176,11 +177,11 @@ local function generate_plugin_dependencies_section(analyzed_plugins)
     local lines = {}
     table.insert(lines, "## Plugin Dependencies")
     table.insert(lines, "")
-    
+
     for _, plugin in ipairs(analyzed_plugins) do
         table.insert(lines, string.format("%-30s %-15s %s", plugin.name, plugin.status, plugin.description))
     end
-    
+
     table.insert(lines, "")
     return lines
 end
@@ -210,81 +211,75 @@ function M.setup_helix_health_command()
     vim.api.nvim_create_user_command('AutoconfHealth', function()
         local loader = require("autoconf.sys.core.loader")
         local resolvers = require("autoconf.sys.core.resolvers")
-        
+
         -- Load the config
         local config_path = "config.toml"
         local config, err = loader.load_config(config_path)
-        
+
         if not config then
             logger.config_error(config_path, err)
             return
         end
-        
+
         -- Collect and analyze all config keys
         local config_keys = collect_config_keys(config)
         table.sort(config_keys, function(a, b) return a.key < b.key end)
-        
+
         local analyzed_keys, resolved_count, unresolved_count = analyze_config_keys(config_keys, resolvers)
-        
+
         -- Analyze plugin dependencies
         local analyzed_plugins, installed_plugins, missing_plugins, plugin_names = analyze_plugin_dependencies(resolvers)
-        
+
         -- Generate all sections
         local lines = {}
-        
+
         -- 1. Header
         local header_lines = generate_header(config_path, #config_keys)
         for _, line in ipairs(header_lines) do
             table.insert(lines, line)
         end
-        
+
         -- 2. Summary (moved to top)
-        local summary_lines = generate_summary(resolved_count, unresolved_count, #config_keys, 
-                                              installed_plugins, missing_plugins, #plugin_names)
+        local summary_lines = generate_summary(resolved_count, unresolved_count, #config_keys,
+            installed_plugins, missing_plugins, #plugin_names)
         for _, line in ipairs(summary_lines) do
             table.insert(lines, line)
         end
-        
+
         -- 3. Configuration Keys
         local config_lines = generate_config_keys_section(analyzed_keys)
         for _, line in ipairs(config_lines) do
             table.insert(lines, line)
         end
-        
+
         -- 4. Plugin Dependencies
         local plugin_lines = generate_plugin_dependencies_section(analyzed_plugins)
         for _, line in ipairs(plugin_lines) do
             table.insert(lines, line)
         end
-        
+
         -- 5. Legend (moved to end)
         local legend_lines = generate_legend()
         for _, line in ipairs(legend_lines) do
             table.insert(lines, line)
         end
-        
+
         -- Create a new buffer to display the health report
         local buf = vim.api.nvim_create_buf(false, true)
         vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
         vim.api.nvim_buf_set_option(buf, 'modifiable', false)
         vim.api.nvim_buf_set_option(buf, 'filetype', 'markdown')
-        
+
         -- Open the buffer in the current window (full screen)
         vim.api.nvim_win_set_buf(0, buf)
         vim.api.nvim_buf_set_name(buf, 'AutoconfHealth')
-        
+
         -- Set buffer-specific keymaps for easy navigation
         vim.keymap.set('n', 'q', '<cmd>bdelete<cr>', { buffer = buf, desc = 'Close AutoconfHealth' })
         vim.keymap.set('n', '<Esc>', '<cmd>bdelete<cr>', { buffer = buf, desc = 'Close AutoconfHealth' })
-        
     end, {
         desc = 'Show Helix configuration health status'
     })
-end
-
-function M.setup_theme_check_command()
-    local theme_check = require("autoconf.sys.commands.theme_check")
-    theme_check.setup_command()
 end
 
 return M
