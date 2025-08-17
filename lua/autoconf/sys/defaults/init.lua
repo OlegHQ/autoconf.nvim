@@ -158,6 +158,10 @@ M.default_config = {
             [">"] = "indent_right",
             ["<"] = "indent_left",
             ["S-U"] = "redo",
+            gd = "goto_definition",
+            gy = "goto_type_definition",
+            gr = "goto_reference",
+            gi = "goto_implementation",
             space = {
                 f = "file_picker",
                 ["/"] = "global_search",
@@ -169,10 +173,6 @@ M.default_config = {
                 r = "rename_symbol",
                 a = "code_action",
                 e = "diagnostic_open_float",
-                gd = "goto_definition",
-                gy = "goto_type_definition",
-                gr = "goto_reference",
-                gi = "goto_implementation"
             }
         },
         visual = {
@@ -196,3 +196,4 @@ M.default_config = {
 }
 
 return M
+
