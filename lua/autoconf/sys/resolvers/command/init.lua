@@ -56,8 +56,81 @@ M.register_command_resolvers = function()
         cmd = "<gv",
         opts = { noremap = true, silent = true }
     })
-    resolvers.define_command_resolver("yank_main_selection_to_clipboard",
-        { cmd = "\"+y$", opts = { noremap = true, silent = true } })
+    resolvers.define_command_resolver("yank_main_selection_to_clipboard", function()
+        -- Check if we're in SSH/Mosh environment
+        local is_remote = os.getenv("SSH_CONNECTION") or os.getenv("SSH_CLIENT") or os.getenv("MOSH_SESSION")
+        
+        if is_remote then
+            -- Use OSC52 for remote connections
+            local mode = vim.fn.mode()
+            local lines = {}
+            
+            if mode == 'v' or mode == 'V' or mode == '\22' then  -- \22 is visual-block mode
+                -- We're in visual mode, get the current selection
+                -- First yank to a register to get the text
+                vim.cmd('normal! "ay')
+                lines = vim.fn.split(vim.fn.getreg('a'), '\n')
+            else
+                -- Not in visual mode, try to get previous visual selection
+                local start_pos = vim.fn.getpos("'<")
+                local end_pos = vim.fn.getpos("'>")
+                
+                -- Validate positions
+                if start_pos[2] == 0 or end_pos[2] == 0 then
+                    -- No valid visual selection, fallback to current line
+                    lines = {vim.fn.getline('.')}
+                else
+                    local start_line, start_col = start_pos[2], start_pos[3]
+                    local end_line, end_col = end_pos[2], end_pos[3]
+                    
+                    -- Get lines and validate
+                    local raw_lines = vim.fn.getline(start_line, end_line)
+                    if type(raw_lines) == 'table' and #raw_lines > 0 then
+                        lines = raw_lines
+                        
+                        -- Trim selection boundaries for characterwise selection
+                        if start_line == end_line then
+                            -- Single line selection
+                            if type(lines[1]) == 'string' and start_col > 0 and end_col > 0 then
+                                lines[1] = string.sub(lines[1], start_col, end_col)
+                            end
+                        else
+                            -- Multi-line selection
+                            if type(lines[1]) == 'string' and start_col > 0 then
+                                lines[1] = string.sub(lines[1], start_col)
+                            end
+                            if type(lines[#lines]) == 'string' and end_col > 0 then
+                                lines[#lines] = string.sub(lines[#lines], 1, end_col)
+                            end
+                        end
+                    else
+                        -- Fallback to current line
+                        lines = {vim.fn.getline('.')}
+                    end
+                end
+            end
+            
+            -- Ensure we have valid lines
+            if #lines == 0 or not lines[1] then
+                lines = {vim.fn.getline('.')}
+            end
+            
+            -- Copy using OSC52
+            require("vim.ui.clipboard.osc52").copy("+")(lines)
+            
+            -- Switch to normal mode
+            if mode ~= 'n' then
+                vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', true)
+            end
+        else
+            -- Use system clipboard for local connections and switch to normal mode
+            vim.cmd('normal! "+y')
+            local mode = vim.fn.mode()
+            if mode ~= 'n' then
+                vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', true)
+            end
+        end
+    end)
 
     resolvers.define_command_resolver("replace_with_yanked",
         { cmd = "c", opts = { noremap = true, silent = true } })
