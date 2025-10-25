@@ -36,7 +36,7 @@ M.default_config = {
         rulers = {},
         bufferline = "never",
         ["color-modes"] = false,
-        ["text-width"] = 80,
+        -- ["text-width"] = 80,
         ["workspace-lsp-roots"] = {},
         ["default-line-ending"] = "native",
         ["insert-final-newline"] = true,
@@ -196,3 +196,4 @@ M.default_config = {
 }
 
 return M
+
