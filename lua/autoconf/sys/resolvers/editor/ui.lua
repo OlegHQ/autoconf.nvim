@@ -198,12 +198,14 @@ M.soft_wrap = function(config)
 
     -- Handle indent retention
     local max_indent_retain = config["max-indent-retain"]
-    if type(max_indent_retain) == "number" then
+    if enable then
+        -- Enable break indent but start from column 0
         vim.o.breakindent = true
-        vim.o.breakindentopt = "shift:" .. max_indent_retain
-    elseif enable then
-        vim.o.breakindent = true
-        vim.o.breakindentopt = "shift:40"
+        -- Remove any shift to ensure wrapping starts from column 0
+        vim.o.breakindentopt = ""
+    else
+        vim.o.breakindent = false
+        vim.o.breakindentopt = ""
     end
 
     -- Handle wrap at text width

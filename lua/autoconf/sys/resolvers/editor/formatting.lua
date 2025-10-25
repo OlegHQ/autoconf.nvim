@@ -135,18 +135,17 @@ M.text_width = function(value)
     end
 
     -- Set text width like Helix editor's maximum line length
-    -- Used for :reflow command and soft-wrapping
+    -- Used for :reflow command only, does NOT enable automatic wrapping
     vim.opt.textwidth = value
     
-    -- Enable soft wrapping at text width (similar to Helix soft-wrap.wrap-at-text-width)
-    vim.opt.wrap = true
-    vim.opt.linebreak = true
-    vim.opt.breakindent = true
-    
-    -- Set wrapping to respect the text width
+    -- Do NOT automatically enable soft wrapping
+    -- Let the soft-wrap config handle wrapping behavior
     vim.opt.wrapmargin = 0
+    
+    -- Ensure automatic text wrapping is disabled by removing 't' and 'a' from formatoptions
+    vim.opt.formatoptions:remove("ta")
 
-    logger.resolver_success("editor.text-width", tostring(value) .. " characters (with visual indicator and soft-wrap)")
+    logger.resolver_success("editor.text-width", tostring(value) .. " characters (for reflow command)")
 end
 
 -- Formatting-related functions will be moved here
