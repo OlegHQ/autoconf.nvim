@@ -20,6 +20,7 @@ M.init_base = function()
     end
 
     vim.opt.fillchars:append({ eob = " " })
+    
 end
 
 M.init_tree_sitter = function()
@@ -47,3 +48,4 @@ M.init_comment = function()
 end
 
 return M
+
