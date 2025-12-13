@@ -68,6 +68,30 @@ lsp = "pyright"
 formatter = "black"
 ```
 
+You can also use the extended table format to pass custom LSP configuration options:
+
+```toml
+[[language]]
+name = "fsharp"
+lsp = { server = "fsautocomplete", cmd = ["dotnet", "fsautocomplete", "--background-service-enabled"] }
+formatter = "fantomas"
+
+[[language]]
+name = "lua"
+lsp = {
+    server = "lua_ls",
+    settings = { Lua = { diagnostics = { globals = ["vim"] } } }
+}
+formatter = "stylua"
+```
+
+The table format supports any lspconfig options including:
+- `cmd` - Custom command to start the LSP server
+- `settings` - Server-specific settings
+- `init_options` - Initialization options
+- `root_dir` - Custom root directory function
+- And any other options supported by nvim-lspconfig
+
 ## Keymap System
 
 The plugin implements a powerful keymap system that:

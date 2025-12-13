@@ -68,12 +68,12 @@ M.default_config = {
 
         lsp = {
             enable = true,
-            ["display-messages"] = true,
+            ["display-messages"] = false,
             ["display-progress-messages"] = false,
-            ["auto-signature-help"] = true,
+            ["auto-signature-help"] = false,
             ["display-inlay-hints"] = false,
             ["display-color-swatches"] = true,
-            ["display-signature-help-docs"] = true,
+            ["display-signature-help-docs"] = false,
             snippets = true,
             ["goto-reference-include-declaration"] = true
         },
