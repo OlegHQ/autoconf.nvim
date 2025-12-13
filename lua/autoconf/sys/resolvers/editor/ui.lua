@@ -178,6 +178,10 @@ M.soft_wrap = function(config)
         return
     end
 
+    if not enable then
+        return
+    end
+
     -- Set basic wrap settings
     vim.wo.wrap = enable
     vim.wo.linebreak = enable and config["max-wrap"] ~= 0
@@ -216,3 +220,4 @@ M.soft_wrap = function(config)
 end
 
 return M
+

@@ -12,7 +12,14 @@ local defaults_tabs = require("autoconf.sys.defaults.tabs")
 
 local M = {}
 
+-- additional mappings for multi cursor
+vim.g.VM_maps = {
+  ["Add Cursor Down"] = "<C-S-j>",
+  ["Add Cursor Up"] = "<C-S-k>",
+} 
+
 function M.init()
+
     -- Setup logger command
     logger.setup_debug_command()
 
@@ -89,3 +96,4 @@ end
 M.Lifecycle = helpers.Lifecycle
 
 return M
+
