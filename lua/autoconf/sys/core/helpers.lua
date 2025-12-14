@@ -1,166 +1,20 @@
-local logger = require("autoconf.sys.core.logger")
-local resolvers = require("autoconf.sys.core.resolvers")
+-- Re-export from focused modules for backward compatibility
+local merge = require("autoconf.sys.core.merge")
+local lifecycle = require("autoconf.sys.core.lifecycle")
+local resolution = require("autoconf.sys.core.resolution")
 
 local M = {}
 
--- Deep merge function to merge user config with defaults
-M.deep_merge = function(default, override)
-    local result = {}
+-- Re-export deep_merge from merge module
+M.deep_merge = merge.deep_merge
 
-    -- Copy all values from default
-    for key, value in pairs(default) do
-        if type(value) == "table" then
-            result[key] = M.deep_merge(value, {})
-        else
-            result[key] = value
-        end
-    end
+-- Re-export Lifecycle enum from lifecycle module
+M.Lifecycle = lifecycle.Lifecycle
 
-    -- Override with values from override table
-    for key, value in pairs(override) do
-        if type(value) == "table" and type(result[key]) == "table" then
-            result[key] = M.deep_merge(result[key], value)
-        else
-            result[key] = value
-        end
-    end
+-- Re-export late_init_resolvers (now called execute_late_init)
+M.late_init_resolvers = lifecycle.execute_late_init
 
-    return result
-end
-
--- Helper function to build nested table from path parts and value
-local function build_nested_table(path_parts, value, start_index)
-    start_index = start_index or 1
-
-    if start_index > #path_parts then
-        return value
-    end
-
-    local result = {}
-    local current_key = path_parts[start_index]
-    result[current_key] = build_nested_table(path_parts, value, start_index + 1)
-
-    return result
-end
-
--- Helper function to split a path into parts
-local function split_path(path)
-    local parts = {}
-    for part in path:gmatch("[^%.]+") do
-        table.insert(parts, part)
-    end
-    return parts
-end
-
-local late_init_resolvers = {}
-
-M.Lifecycle = {
-    LATE = "LATE",
-    NORMAL = "NORMAL"
-}
-
--- Smart resolver function with hierarchical fallback
-local function try_resolve_with_fallback(full_path, value, debug)
-    -- Special handling for keymap paths (keys.mode.combo)
-    if resolvers.is_keymap_path(full_path) then
-        local mode, keys, has_space = resolvers.match_keymap_mode_keys(full_path)
-
-        if mode and keys then
-            resolvers.attempt_to_keymap(full_path, keys, mode, value, has_space)
-        end
-        return true
-    end
-
-    -- Split the path into parts
-    local path_parts = split_path(full_path)
-
-    local paths_tried = {}
-
-    local function unwrap_resolver(resolver)
-        if type(resolver) == "function" then
-            return resolver, M.Lifecycle.NORMAL
-        end
-        return resolver.resolver, resolver.lifecycle or M.Lifecycle.NORMAL
-    end
-
-    -- Try resolvers from most specific to least specific
-    for i = #path_parts, 1, -1 do
-        -- Build the current path to try
-        local current_path = table.concat(path_parts, ".", 1, i)
-        local has_resolver = resolvers.has_resolver(current_path)
-
-        table.insert(paths_tried, {
-            path = current_path,
-            found = has_resolver,
-            direct = i == #path_parts
-        })
-
-        -- Check if there's a resolver for this path
-        if has_resolver then
-            local resolver, lifecycle = unwrap_resolver(resolvers.get_resolver(current_path))
-
-            -- If this is the exact path, use the original value
-            if i == #path_parts then
-                if lifecycle == M.Lifecycle.LATE then
-                    table.insert(late_init_resolvers, {
-                        path = current_path,
-                        resolver = resolver,
-                        value = value
-                    })
-                else
-                    resolver(value)
-                end
-            else
-                -- Build nested structure for remaining path parts
-                local nested_value = build_nested_table(path_parts, value, i + 1)
-                if lifecycle == M.Lifecycle.LATE then
-                    table.insert(late_init_resolvers, {
-                        path = current_path,
-                        resolver = resolver,
-                        value = value
-                    })
-                else
-                    resolver(nested_value)
-                end
-                logger.resolver_fallback(full_path, current_path)
-            end
-
-            if debug then
-                logger.debug_resolver_lookup(full_path, paths_tried)
-            end
-            return true
-        end
-    end
-
-    if debug then
-        logger.debug_resolver_lookup(full_path, paths_tried)
-    end
-    return false
-end
-
-M.late_init_resolvers = function()
-    for _, resolver in ipairs(late_init_resolvers) do
-        resolver.resolver(resolver.value)
-    end
-end
-
-M.resolve_configs = function(config, prefix, debug)
-    prefix = prefix or ""
-
-    for key, value in pairs(config) do
-        local full_key = prefix == "" and key or (prefix .. "." .. key)
-
-        if type(value) == "table" then
-            -- First try to resolve this path as a whole (in case there's a resolver that handles nested configs)
-            if not try_resolve_with_fallback(full_key, value, debug) then
-                -- If no resolver found, recursively process nested tables
-                M.resolve_configs(value, full_key, debug)
-            end
-        else
-            -- Try to resolve with hierarchical fallback
-            try_resolve_with_fallback(full_key, value, debug)
-        end
-    end
-end
+-- Re-export resolve_configs from resolution module
+M.resolve_configs = resolution.resolve_configs
 
 return M

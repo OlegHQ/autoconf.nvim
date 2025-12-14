@@ -1,8 +1,7 @@
 local logger = require("autoconf.sys.core.logger")
+local builder = require("autoconf.sys.core.resolver_builder")
 
 local M = {}
-
-
 
 M.auto_format = function(value)
     -- Validate that the value is a boolean
@@ -127,26 +126,13 @@ M.insert_final_newline = function(value)
     end
 end
 
-M.text_width = function(value)
-    -- Validate that the value is a number
-    if type(value) ~= "number" then
-        logger.resolver_error("editor.text-width", "must be a number, got: " .. type(value))
-        return
-    end
-
-    -- Set text width like Helix editor's maximum line length
-    -- Used for :reflow command only, does NOT enable automatic wrapping
+-- Text width - custom logic for formatoptions handling
+M.text_width = builder.custom("editor.text-width", "number", function(value)
     vim.opt.textwidth = value
-    
-    -- Do NOT automatically enable soft wrapping
-    -- Let the soft-wrap config handle wrapping behavior
     vim.opt.wrapmargin = 0
-    
-    -- Ensure automatic text wrapping is disabled by removing 't' and 'a' from formatoptions
     vim.opt.formatoptions:remove("ta")
-
     logger.resolver_success("editor.text-width", tostring(value) .. " characters (for reflow command)")
-end
+end)
 
 -- Formatting-related functions will be moved here
 M.whitespace = function(config)

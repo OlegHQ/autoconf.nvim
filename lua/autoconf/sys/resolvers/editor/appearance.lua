@@ -1,80 +1,36 @@
 local logger = require("autoconf.sys.core.logger")
+local builder = require("autoconf.sys.core.resolver_builder")
 
 local M = {}
 
+-- Simple boolean toggles using builder
+M.cursorcolumn = builder.vim_opt_boolean("editor.cursorcolumn", "cursorcolumn")
 
-M.cursorcolumn = function(value)
-    -- Validate that the value is a boolean
-    if type(value) ~= "boolean" then
-        logger.resolver_error("editor.cursorcolumn", "must be a boolean, got: " .. type(value))
-        return
-    end
+M.color_modes = builder.vim_g_boolean("editor.color-modes", "helix_color_modes", {
+    enabled_msg = "enabled (requires statusline plugin support)"
+})
 
-    -- Set cursor column option
-    vim.opt.cursorcolumn = value
+M.true_color = builder.vim_opt_boolean("editor.true-color", "termguicolors")
 
-    logger.resolver_success("editor.cursorcolumn", value and "enabled" or "disabled")
-end
+M.cursorline = builder.vim_opt_boolean("editor.cursorline", "cursorline")
 
-
-M.color_modes = function(value)
-    -- Validate that the value is a boolean
-    if type(value) ~= "boolean" then
-        logger.resolver_error("editor.color-modes", "must be a boolean, got: " .. type(value))
-        return
-    end
-
-    if value then
-        -- Enable colored mode indicator (requires statusline plugin)
-        vim.g.helix_color_modes = true
-        logger.resolver_success("editor.color-modes", "enabled (requires statusline plugin support)")
-    else
-        vim.g.helix_color_modes = false
-        logger.resolver_success("editor.color-modes", "disabled")
-    end
-end
-
-
-
-M.true_color = function(value)
-    -- Validate that the value is a boolean
-    if type(value) ~= "boolean" then
-        logger.resolver_error("editor.true-color", "must be a boolean, got: " .. type(value))
-        return
-    end
-
-    -- Set terminal GUI colors
-    vim.opt.termguicolors = value
-
-    logger.resolver_success("editor.true-color", value and "enabled" or "disabled")
-end
-
-
-M.undercurl = function(value)
-    -- Validate that the value is a boolean
-    if type(value) ~= "boolean" then
-        logger.resolver_error("editor.undercurl", "must be a boolean, got: " .. type(value))
-        return
-    end
-
-    if value then
-        -- Enable undercurl support
+-- Undercurl requires custom on/off logic
+M.undercurl = builder.boolean_toggle("editor.undercurl", {
+    on = function()
         vim.g.undercurl = true
-        -- Set up undercurl highlight
         vim.cmd([[
-                if &term =~ "xterm" || &term =~ "screen" || &term =~ "tmux"
-                    let &t_Cs = "\e[4:3m"
-                    let &t_Ce = "\e[4:0m"
-                endif
-            ]])
-        logger.resolver_success("editor.undercurl", "enabled")
-    else
+            if &term =~ "xterm" || &term =~ "screen" || &term =~ "tmux"
+                let &t_Cs = "\e[4:3m"
+                let &t_Ce = "\e[4:0m"
+            endif
+        ]])
+    end,
+    off = function()
         vim.g.undercurl = false
-        logger.resolver_success("editor.undercurl", "disabled")
     end
-end
+})
 
-
+-- Theme requires custom error handling
 M.theme = function(value)
     local success, err = pcall(function()
         vim.cmd("colorscheme " .. value)
@@ -87,12 +43,6 @@ M.theme = function(value)
         vim.notify("Theme '" .. value .. "' not found. Please install the theme or check the name.",
             vim.log.levels.WARN)
     end
-end
-
-
-M.cursorline = function(value)
-    vim.opt.cursorline = value
-    logger.resolver_success("editor.cursorline", value)
 end
 
 M.cursor_shape = function(value)

@@ -1,59 +1,28 @@
 local logger = require("autoconf.sys.core.logger")
+local builder = require("autoconf.sys.core.resolver_builder")
+
 local M = {}
 
-
-
-M.middle_click_paste = function(value)
-    -- Validate that the value is a boolean
-    if type(value) ~= "boolean" then
-        logger.resolver_error("editor.middle-click-paste", "must be a boolean, got: " .. type(value))
-        return
-    end
-
-    -- Configure middle-click paste behavior
-    if value then
-        -- Enable middle-click paste
+-- Middle-click paste requires custom keymap setup
+M.middle_click_paste = builder.boolean_toggle("editor.middle-click-paste", {
+    on = function()
         vim.keymap.set({ 'n', 'v' }, '<MiddleMouse>', '<MiddleMouse>', { desc = 'Middle click paste' })
         vim.keymap.set('i', '<MiddleMouse>', '<C-r>*', { desc = 'Middle click paste in insert mode' })
-    else
-        -- Disable middle-click paste by mapping to nothing
+    end,
+    off = function()
         vim.keymap.set({ 'n', 'v', 'i' }, '<MiddleMouse>', '<Nop>', { desc = 'Disable middle click paste' })
     end
+})
 
-    logger.resolver_success("editor.middle-click-paste", value and "enabled" or "disabled")
-end
+-- Simple number resolvers using builder
+M.scrolloff = builder.vim_opt_number("editor.scrolloff", "scrolloff", {
+    min = 0,
+    format = function(v) return tostring(v) .. " lines" end
+})
 
-M.scrolloff = function(value)
-    -- Validate that the value is a number
-    if type(value) ~= "number" then
-        logger.resolver_error("editor.scrolloff", "must be a number, got: " .. type(value))
-        return
-    end
-
-    -- Validate that the value is non-negative
-    if value < 0 then
-        logger.resolver_error("editor.scrolloff", "must be non-negative, got: " .. tostring(value))
-        return
-    end
-
-    -- Set the scrolloff option
-    vim.opt.scrolloff = value
-
-    logger.resolver_success("editor.scrolloff", tostring(value) .. " lines")
-end
-
-
-M.idle_timeout = function(value)
-    -- Validate that the value is a number
-    if type(value) ~= "number" then
-        logger.resolver_error("editor.idle-timeout", "must be a number, got: " .. type(value))
-        return
-    end
-
-    -- Set updatetime for CursorHold events
-    vim.opt.updatetime = value
-    logger.resolver_success("editor.idle-timeout", tostring(value) .. "ms")
-end
+M.idle_timeout = builder.vim_opt_number("editor.idle-timeout", "updatetime", {
+    format = function(v) return tostring(v) .. "ms" end
+})
 
 
 

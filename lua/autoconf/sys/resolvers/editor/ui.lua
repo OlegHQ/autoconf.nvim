@@ -1,34 +1,23 @@
 local logger = require("autoconf.sys.core.logger")
+local builder = require("autoconf.sys.core.resolver_builder")
+
 local M = {}
 
+-- Mouse - maps boolean to vim.opt.mouse value
+M.mouse = builder.vim_opt_mapped("editor.mouse", "mouse", {
+    [true] = "a",
+    [false] = ""
+}, { type = "boolean" })
 
-
-M.mouse = function(value)
-    if value then
-        vim.opt.mouse = "a"
-    else
-        vim.opt.mouse = ""
-    end
-    logger.resolver_success("editor.mouse", value)
-end
-
-M.continue_comments = function(value)
-    -- Validate that the value is a boolean
-    if type(value) ~= "boolean" then
-        logger.resolver_error("editor.continue-comments", "must be a boolean, got: " .. type(value))
-        return
-    end
-
-    if value then
-        -- Enable comment continuation by setting formatoptions
+-- Continue comments - custom formatoptions handling
+M.continue_comments = builder.boolean_toggle("editor.continue-comments", {
+    on = function()
         vim.opt.formatoptions:append("cro")
-        logger.resolver_success("editor.continue-comments", "enabled")
-    else
-        -- Disable comment continuation by removing from formatoptions
+    end,
+    off = function()
         vim.opt.formatoptions:remove("cro")
-        logger.resolver_success("editor.continue-comments", "disabled")
     end
-end
+})
 
 M.editor_config = function(value)
     -- Validate that the value is a boolean
