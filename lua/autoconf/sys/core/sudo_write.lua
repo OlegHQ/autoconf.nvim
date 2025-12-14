@@ -3,6 +3,7 @@ local M = {}
 
 function M.write()
     local filepath = vim.fn.expand("%:p")
+    local original_buf = vim.api.nvim_get_current_buf()
 
     -- Validate file path
     if filepath == "" then
@@ -11,7 +12,7 @@ function M.write()
     end
 
     -- Get buffer content
-    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    local lines = vim.api.nvim_buf_get_lines(original_buf, 0, -1, false)
 
     -- Write to temp file
     local temp = os.tmpname()
@@ -42,18 +43,21 @@ function M.write()
     local escaped_temp = temp:gsub("'", "'\\''")
 
     -- Build command: copy temp to target, then cleanup
+    -- Use full path to sudo and run via shell to ensure proper PATH
     local cmd = string.format(
-        "sudo cp '%s' '%s' && rm '%s' && echo '' && echo '✓ Saved successfully!' || (rm '%s' 2>/dev/null; echo '' && echo '✗ Save failed')",
+        "/usr/bin/sudo cp '%s' '%s' && rm '%s' && echo '' && echo '✓ Saved successfully!' || (rm '%s' 2>/dev/null; echo '' && echo '✗ Save failed')",
         escaped_temp, escaped_path, escaped_temp, escaped_temp
     )
 
-    -- Run in terminal
-    vim.fn.termopen(cmd, {
+    -- Run in terminal with proper shell
+    vim.fn.termopen({ "/bin/sh", "-c", cmd }, {
         on_exit = function(_, exit_code, _)
             vim.schedule(function()
                 if exit_code == 0 then
-                    -- Mark buffer as saved
-                    vim.bo.modified = false
+                    -- Mark original buffer as saved
+                    if vim.api.nvim_buf_is_valid(original_buf) then
+                        vim.bo[original_buf].modified = false
+                    end
                 end
 
                 -- Auto-close after delay
