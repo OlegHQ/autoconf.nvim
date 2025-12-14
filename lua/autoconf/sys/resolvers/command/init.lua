@@ -178,6 +178,11 @@ M.register_command_resolvers = function()
         on_lsp_attach = true,
         cmd = lsp_cmd("vim.lsp.buf.implementation")
     })
+
+    -- Sudo write command
+    resolvers.define_command_resolver("sudo_write", function()
+        require("autoconf.sys.core.sudo_write").write()
+    end)
 end
 
 return M

@@ -67,6 +67,7 @@ function M.init()
 
     -- Setup commands
     commands.setup_helix_health_command()
+    commands.setup_sudo_write_command()
 
     -- Late init resolvers
     helpers.late_init_resolvers()

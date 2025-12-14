@@ -282,4 +282,20 @@ function M.setup_helix_health_command()
     })
 end
 
+-- Function to create the SudoWrite command
+function M.setup_sudo_write_command()
+    vim.api.nvim_create_user_command("SudoWrite", function()
+        require("autoconf.sys.core.sudo_write").write()
+    end, {
+        desc = "Write file with sudo privileges"
+    })
+
+    -- Convenient alias
+    vim.api.nvim_create_user_command("W", function()
+        require("autoconf.sys.core.sudo_write").write()
+    end, {
+        desc = "Write file with sudo (alias)"
+    })
+end
+
 return M
