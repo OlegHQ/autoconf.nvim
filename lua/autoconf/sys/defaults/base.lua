@@ -20,7 +20,9 @@ M.init_base = function()
     end
 
     vim.opt.fillchars:append({ eob = " " })
-    
+
+    -- Disable automatic line wrapping while typing
+    vim.opt.formatoptions:remove({ "t", "c" })
 end
 
 M.init_tree_sitter = function()
