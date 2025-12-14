@@ -9,6 +9,7 @@ local helpers = require("autoconf.sys.core.helpers")
 local defaults_lsp = require("autoconf.sys.defaults.lsp")
 local defaults_base = require("autoconf.sys.defaults.base")
 local defaults_tabs = require("autoconf.sys.defaults.tabs")
+local plugins = require("autoconf.sys.defaults.plugins")
 
 local M = {}
 
@@ -16,29 +17,15 @@ local M = {}
 vim.g.VM_maps = {
   ["Add Cursor Down"] = "<C-S-j>",
   ["Add Cursor Up"] = "<C-S-k>",
-} 
+}
 
 function M.init()
 
     -- Setup logger command
     logger.setup_debug_command()
 
-    -- Plugin dependencies
-    resolvers.register_plugin_dependency("lualine.nvim", "Statusline plugin for statusline configuration", "lualine")
-    resolvers.register_plugin_dependency("nvim-autopairs", "Auto-pairing of brackets and quotes", "nvim-autopairs")
-    resolvers.register_plugin_dependency("nvim-lspconfig", "LSP configuration for Neovim", "lspconfig")
-    resolvers.register_plugin_dependency("nvim-cmp", "Completion plugin for auto-completion features")
-    resolvers.register_plugin_dependency("telescope.nvim", "Fuzzy finder for file picker functionality")
-    resolvers.register_plugin_dependency("nvim-treesitter", "Syntax highlighting and parsing")
-    resolvers.register_plugin_dependency("gitsigns.nvim", "Git integration for diff signs in gutters", "gitsigns")
-    resolvers.register_plugin_dependency("conform.nvim", "Formatting plugin for auto-format functionality", "conform")
-    resolvers.register_plugin_dependency("cmp-path", "Path completion source for nvim-cmp", "cmp_path")
-    resolvers.register_plugin_dependency("bufferline.nvim", "Buffer line/tab display at the top of the editor",
-        "bufferline")
-    resolvers.register_plugin_dependency("hop.nvim", "Jump navigation plugin for jump-label functionality", "hop")
-    resolvers.register_plugin_dependency("lsp_lines",
-        "renders diagnostics using virtual lines on top of the real line of code", "lsp_lines")
-    resolvers.register_plugin_dependency("indent-blankline.nvim", " Indent guides for Neovim", "ibl")
+    -- Register plugin dependencies from manifest
+    plugins.register_all(resolvers)
 
     -- Path to the TOML config file (update this to your actual config path)
     local config_path = "config.toml"
