@@ -3,19 +3,21 @@ local M = {}
 -- Import logger
 local logger = require("autoconf.sys.core.logger")
 
+-- Import keymaps module for delegation
+local keymaps = require("autoconf.sys.core.keymaps")
+
 -- Registry to store resolvers
 M.resolvers = {}
 
 -- Registry to store command resolvers (separate from config resolvers)
 M.command_resolvers = {}
 
--- Registry to track keymap resolution status
-M.keymap_status = {}
-
 -- Registry to store plugin dependencies
 M.plugin_dependencies = {}
 
-M.on_lsp_attach_keymaps = {}
+-- Delegate keymap registries to keymaps module (for backward compatibility)
+M.keymap_status = keymaps.keymap_status
+M.on_lsp_attach_keymaps = keymaps.on_lsp_attach_keymaps
 
 -- Function to define a resolver for a specific config path
 function M.define_resolver(config_item_path, resolver_function)
@@ -47,6 +49,8 @@ function M.define_command_resolver(command_name, resolver_function)
     if is_function or is_table or is_string then
         -- Register the command resolver
         M.command_resolvers[command_name] = resolver_function
+        -- Update keymaps module reference (needed for keymap resolution)
+        keymaps.set_command_resolvers(M.command_resolvers)
         return
     end
 
@@ -63,177 +67,12 @@ function M.has_command_resolver(command_name)
     return M.command_resolvers[command_name] ~= nil
 end
 
-local function resolve_command_def(nvim_mode, keys, command_def)
-    if type(command_def) == "string" or type(command_def) == "function" then
-        return function() vim.keymap.set(nvim_mode, keys, command_def) end
-    elseif type(command_def) == "table" then
-        if command_def.per_mode ~= nil and command_def.per_mode[nvim_mode] ~= nil then
-            return resolve_command_def(nvim_mode, keys, command_def.per_mode[nvim_mode])
-        elseif command_def.cmd ~= nil then
-            return function() vim.keymap.set(nvim_mode, keys, command_def.cmd, command_def.opts or {}) end
-        elseif command_def.fn ~= nil then
-            return function() vim.keymap.set(nvim_mode, keys, command_def.fn, command_def.opts or {}) end
-        end
-        error(string.format("invalid command definition: %s, %s", nvim_mode, keys))
-    end
-end
-
--- Function to attempt keymap binding
-function M.attempt_to_keymap(_, keys, mode, command, has_space)
-    local key_path = "keys." .. mode .. "." .. keys
-
-    -- Handle both string commands and array commands
-    local command_list = {}
-    local command_desc = ""
-
-    if type(command) == "string" then
-        command_list = { command }
-        command_desc = command
-    elseif type(command) == "table" then
-        command_list = command
-        command_desc = table.concat(command, " + ")
-    else
-        M.keymap_status[key_path] = {
-            resolved = false,
-            error = "Command must be a string or array, got " .. type(command),
-            keys = keys,
-            mode = mode,
-            command = command
-        }
-        logger.keymap_error(key_path, "Command must be a string or array, got " .. type(command))
-        return false
-    end
-
-    -- Check if all commands have command resolvers
-    for _, cmd in ipairs(command_list) do
-        if not M.has_command_resolver(cmd) then
-            M.keymap_status[key_path] = {
-                resolved = false,
-                error = "Command '" .. tostring(cmd) .. "' has no command resolver",
-                keys = keys,
-                mode = mode,
-                command = command
-            }
-            logger.keymap_error(key_path, "Command '" .. tostring(cmd) .. "' has no command resolver")
-            return false
-        end
-    end
-
-    -- Map Helix mode names to Neovim mode names
-    local mode_map = {
-        normal = "n",
-        insert = "i",
-        visual = "v",
-        select = "s",
-        command = "c",
-        terminal = "t",
-        ["visualselect"] = "x",
-    }
-
-    local nvim_mode = mode_map[mode] or mode
-
-    local command_def
-    if #command_list == 1 then
-        -- Single command
-        command_def = M.get_command_resolver(command_list[1])
-    else
-        error("only single command is supported")
-    end
-
-    -- Convert Helix key combos to Neovim format (C=Control, S=Shift, A=Alt)
-    keys = keys:gsub("([CSA])%-([a-zA-Z])", "<%1-%2>")
-    if has_space then
-        keys = "<leader>" .. keys
-    end
-
-    local is_on_lsp_attach_command = false
-    if type(command_def) == "table" and command_def.on_lsp_attach then
-        is_on_lsp_attach_command = true
-    end
-
-    local on_keymap = resolve_command_def(nvim_mode, keys, command_def)
-    local set_keymap_fn = function()
-        local success, err = pcall(on_keymap)
-
-        -- Store the result
-        M.keymap_status[key_path] = {
-            resolved = success,
-            error = err,
-            keys = keys,
-            mode = mode,
-            nvim_mode = nvim_mode,
-            command = command
-        }
-
-        if success then
-            logger.keymap_success(key_path, command_desc)
-        else
-            logger.keymap_error(key_path, tostring(err))
-        end
-        return success
-    end
-
-    if is_on_lsp_attach_command then
-        table.insert(M.on_lsp_attach_keymaps, set_keymap_fn)
-    else
-        set_keymap_fn()
-    end
-end
-
--- Function to check if a keymap was resolved
-function M.is_keymap_resolved(key_path)
-    local status = M.keymap_status[key_path]
-    return status and status.resolved or false
-end
-
--- Function to get keymap status
-function M.get_keymap_status(key_path)
-    return M.keymap_status[key_path]
-end
-
-local function split(str, sep)
-    local result = {}
-    for part in string.gmatch(str, "([^" .. sep .. "]+)") do
-        table.insert(result, part)
-    end
-    return result
-end
-
-local function hasValue(array, value)
-    for _, v in ipairs(array) do
-        if v == value then
-            return true
-        end
-    end
-    return false
-end
-
--- Function to check if a path is a keymap path
-function M.is_keymap_path(path)
-    local parts = split(path, ".")
-    if #parts < 3 then
-        return false
-    end
-    if parts[1] ~= "keys" then
-        return false
-    end
-    if parts[#parts] == "space" then
-        return false
-    end
-    return true
-end
-
-function M.match_keymap_mode_keys(full_path)
-    local parts = split(full_path, ".")
-    local has_space = hasValue(parts, "space")
-    local mode = parts[2]
-    -- last elem
-    local keys = parts[#parts]
-    if has_space then
-        keys = parts[#parts]
-    end
-    return mode, keys, has_space
-end
+-- Delegate keymap functions to keymaps module
+M.attempt_to_keymap = keymaps.attempt_to_keymap
+M.is_keymap_resolved = keymaps.is_keymap_resolved
+M.get_keymap_status = keymaps.get_keymap_status
+M.is_keymap_path = keymaps.is_keymap_path
+M.match_keymap_mode_keys = keymaps.match_keymap_mode_keys
 
 -- Function to register a plugin dependency
 function M.register_plugin_dependency(plugin_name, description, lua_module_name)
