@@ -1,4 +1,5 @@
 local logger = require("autoconf.sys.core.logger")
+local builder = require("autoconf.sys.core.resolver_builder")
 
 local M = {}
 
@@ -71,65 +72,43 @@ M.popup_border = function(value)
     logger.resolver_success("editor.popup-border", value)
 end
 
--- LSP enable/disable resolver
-M.enable = function(value)
-    if type(value) ~= "boolean" then
-        logger.resolver_error("editor.lsp.enable", "must be a boolean, got: " .. type(value))
-        return
-    end
-
-    if value then
-        -- Enable LSP - this is handled by the language system
+-- LSP enable/disable resolver (auto-registered)
+M.enable = builder.boolean_toggle("editor.lsp.enable", {
+    on = function()
         vim.g.lsp_enabled = true
-        logger.resolver_success("editor.lsp.enable", "enabled")
-    else
-        -- Disable LSP completely
+    end,
+    off = function()
         vim.g.lsp_enabled = false
         -- Stop all LSP clients
         for _, client in pairs(vim.lsp.get_clients()) do
             client.stop()
         end
-        logger.resolver_success("editor.lsp.enable", "disabled")
     end
-end
+})
 
--- Display LSP messages resolver
-M.display_messages = function(value)
-    if type(value) ~= "boolean" then
-        logger.resolver_error("editor.lsp.display-messages", "must be a boolean, got: " .. type(value))
-        return
-    end
-
-    if value then
+-- Display LSP messages resolver (auto-registered)
+M.display_messages = builder.boolean_toggle("editor.lsp.display-messages", {
+    on = function()
         -- Enable LSP messages (default behavior)
         vim.lsp.handlers["window/showMessage"] = vim.lsp.handlers["window/showMessage"]
-        logger.resolver_success("editor.lsp.display-messages", "enabled")
-    else
+    end,
+    off = function()
         -- Disable LSP messages by overriding handler to no-op
         vim.lsp.handlers["window/showMessage"] = function() end
-        logger.resolver_success("editor.lsp.display-messages", "disabled")
     end
-end
+})
 
--- Display progress messages resolver
-M.display_progress_messages = function(value)
-    if type(value) ~= "boolean" then
-        logger.resolver_error("editor.lsp.display-progress-messages", "must be a boolean, got: " .. type(value))
-        return
-    end
-
-    if value then
-        -- Enable progress messages
+-- Display progress messages resolver (auto-registered)
+M.display_progress_messages = builder.boolean_toggle("editor.lsp.display-progress-messages", {
+    on = function()
         vim.g.lsp_progress_enabled = true
-        logger.resolver_success("editor.lsp.display-progress-messages", "enabled")
-    else
-        -- Disable progress messages
+    end,
+    off = function()
         vim.g.lsp_progress_enabled = false
         -- Override progress handler to no-op
         vim.lsp.handlers["$/progress"] = function() end
-        logger.resolver_success("editor.lsp.display-progress-messages", "disabled")
     end
-end
+})
 
 -- Auto signature help resolver
 M.auto_signature_help = function(value)
@@ -211,21 +190,13 @@ M.display_signature_help_docs = function(value)
     logger.resolver_success("editor.lsp.display-signature-help-docs", value and "enabled" or "disabled")
 end
 
--- Snippets resolver
-M.snippets = function(value)
-    if type(value) ~= "boolean" then
-        logger.resolver_error("editor.lsp.snippets", "must be a boolean, got: " .. type(value))
-        return
-    end
-
-    if value then
-        -- Enable snippets
+-- Snippets resolver (auto-registered)
+M.snippets = builder.boolean_toggle("editor.lsp.snippets", {
+    on = function()
         vim.g.lsp_snippets_enabled = true
-        logger.resolver_success("editor.lsp.snippets", "enabled")
-    else
-        -- Disable snippets by modifying LSP capabilities
+    end,
+    off = function()
         vim.g.lsp_snippets_enabled = false
-        
         -- Override LSP capabilities to disable snippet support
         local original_make_client_capabilities = vim.lsp.protocol.make_client_capabilities
         vim.lsp.protocol.make_client_capabilities = function()
@@ -233,10 +204,8 @@ M.snippets = function(value)
             capabilities.textDocument.completion.completionItem.snippetSupport = false
             return capabilities
         end
-        
-        logger.resolver_success("editor.lsp.snippets", "disabled")
     end
-end
+})
 
 -- Goto reference include declaration resolver
 M.goto_reference_include_declaration = function(value)

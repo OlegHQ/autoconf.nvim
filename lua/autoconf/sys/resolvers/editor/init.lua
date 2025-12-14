@@ -70,16 +70,12 @@ M.register_editor_resolvers = function()
     resolvers.define_resolver("editor.bufferline", statusline.bufferline)
     resolvers.define_resolver("editor.statusline", statusline.statusline)
 
-    -- LSP resolvers
+    -- LSP resolvers (auto-registered: enable, display-messages, display-progress-messages, snippets)
     resolvers.define_resolver("editor.auto-info", lsp.auto_info)
     resolvers.define_resolver("editor.popup-border", lsp.popup_border)
-    resolvers.define_resolver("editor.lsp.enable", lsp.enable)
-    resolvers.define_resolver("editor.lsp.display-messages", lsp.display_messages)
-    resolvers.define_resolver("editor.lsp.display-progress-messages", lsp.display_progress_messages)
     resolvers.define_resolver("editor.lsp.auto-signature-help", lsp.auto_signature_help)
     resolvers.define_resolver("editor.lsp.display-inlay-hints", lsp.display_inlay_hints)
     resolvers.define_resolver("editor.lsp.display-signature-help-docs", lsp.display_signature_help_docs)
-    resolvers.define_resolver("editor.lsp.snippets", lsp.snippets)
     resolvers.define_resolver("editor.lsp.goto-reference-include-declaration", lsp.goto_reference_include_declaration)
     resolvers.define_resolver("editor.lsp.display-color-swatches", lsp.display_color_swatches)
 
