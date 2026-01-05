@@ -59,12 +59,12 @@ M.register_command_resolvers = function()
     resolvers.define_command_resolver("yank_main_selection_to_clipboard", function()
         -- Check if we're in SSH/Mosh environment
         local is_remote = os.getenv("SSH_CONNECTION") or os.getenv("SSH_CLIENT") or os.getenv("MOSH_SESSION")
-        
+
         if is_remote then
             -- Use OSC52 for remote connections
             local mode = vim.fn.mode()
             local lines = {}
-            
+
             if mode == 'v' or mode == 'V' or mode == '\22' then  -- \22 is visual-block mode
                 -- We're in visual mode, get the current selection
                 -- First yank to a register to get the text
@@ -74,7 +74,7 @@ M.register_command_resolvers = function()
                 -- Not in visual mode, try to get previous visual selection
                 local start_pos = vim.fn.getpos("'<")
                 local end_pos = vim.fn.getpos("'>")
-                
+
                 -- Validate positions
                 if start_pos[2] == 0 or end_pos[2] == 0 then
                     -- No valid visual selection, fallback to current line
@@ -82,12 +82,12 @@ M.register_command_resolvers = function()
                 else
                     local start_line, start_col = start_pos[2], start_pos[3]
                     local end_line, end_col = end_pos[2], end_pos[3]
-                    
+
                     -- Get lines and validate
                     local raw_lines = vim.fn.getline(start_line, end_line)
                     if type(raw_lines) == 'table' and #raw_lines > 0 then
                         lines = raw_lines
-                        
+
                         -- Trim selection boundaries for characterwise selection
                         if start_line == end_line then
                             -- Single line selection
@@ -109,15 +109,37 @@ M.register_command_resolvers = function()
                     end
                 end
             end
-            
+
             -- Ensure we have valid lines
             if #lines == 0 or not lines[1] then
                 lines = {vim.fn.getline('.')}
             end
-            
-            -- Copy using OSC52
-            require("vim.ui.clipboard.osc52").copy("+")(lines)
-            
+
+            -- Copy using OSC52 with tmux-aware output
+            local text = table.concat(lines, '\n')
+            local encoded = vim.base64.encode(text)
+            local osc52_seq = string.format('\027]52;c;%s\027\\', encoded)
+
+            -- If inside tmux, write directly to the client's tty for reliable passthrough
+            local tmux = os.getenv("TMUX")
+            if tmux then
+                local handle = io.popen("tmux display-message -p '#{client_tty}'")
+                if handle then
+                    local tty = handle:read("*l")
+                    handle:close()
+                    if tty and tty ~= "" then
+                        local tty_handle = io.open(tty, "w")
+                        if tty_handle then
+                            tty_handle:write(osc52_seq)
+                            tty_handle:close()
+                        end
+                    end
+                end
+            else
+                -- Not in tmux, use Neovim's built-in OSC52
+                require("vim.ui.clipboard.osc52").copy("+")(lines)
+            end
+
             -- Switch to normal mode
             if mode ~= 'n' then
                 vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', true)
