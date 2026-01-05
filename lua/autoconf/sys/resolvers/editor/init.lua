@@ -96,6 +96,8 @@ M.register_editor_resolvers = function()
     resolvers.define_resolver("editor.hlsearch", function(value) vim.opt.hlsearch = value end)
     resolvers.define_resolver("editor.swapfile", function(value) vim.opt.swapfile = value end)
     resolvers.define_resolver("editor.wrap", function(value) vim.opt.wrap = value end)
+    resolvers.define_resolver("editor.cursorline", function(value) vim.opt.cursorline = value end)
+    resolvers.define_resolver("editor.cursorlineopt", function(value) vim.opt.cursorlineopt = value end)
 end
 
 return M

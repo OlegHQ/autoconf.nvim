@@ -21,6 +21,10 @@ M.init_base = function()
 
     vim.opt.fillchars:append({ eob = " " })
 
+    -- Enable cursorline with Helix-style (number only) highlighting
+    vim.opt.cursorline = true
+    vim.opt.cursorlineopt = 'number'
+
     -- Disable automatic line wrapping while typing
     vim.opt.formatoptions:remove({ "t", "c" })
 end
@@ -47,6 +51,17 @@ M.init_comment = function()
 
     comment.setup()
     vim.keymap.del("n", "gcc")
+end
+
+M.init_auto_mkdir = function()
+    vim.api.nvim_create_autocmd({ "BufWritePre" }, {
+        callback = function()
+            local dir = vim.fn.expand("<afile>:p:h")
+            if vim.fn.isdirectory(dir) == 0 then
+                vim.fn.mkdir(dir, "p")
+            end
+        end,
+    })
 end
 
 return M

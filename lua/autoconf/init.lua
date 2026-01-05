@@ -46,6 +46,7 @@ function M.init()
     defaults_base.init_base()
     defaults_base.init_tree_sitter()
     defaults_base.init_comment()
+    defaults_base.init_auto_mkdir()
 
     -- Load the TOML config
     local languages_config, err = loader.load_config(languages_path)
