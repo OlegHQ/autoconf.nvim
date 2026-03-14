@@ -13,65 +13,52 @@ local plugins = require("autoconf.sys.defaults.plugins")
 
 local M = {}
 
--- additional mappings for multi cursor
-vim.g.VM_maps = {
-  ["Add Cursor Down"] = "<C-S-j>",
-  ["Add Cursor Up"] = "<C-S-k>",
-}
-
 function M.init()
-
     -- Setup logger command
     logger.setup_debug_command()
-
-    -- Register plugin dependencies from manifest
     plugins.register_all(resolvers)
 
-    -- Path to the TOML config file (update this to your actual config path)
     local config_path = "config.toml"
     local languages_path = "languages.toml"
 
-    -- Load the TOML config
     local user_config, err = loader.load_config(config_path)
     if not user_config then
         logger.config_error(config_path, err)
         return
     end
 
-    logger.info("Configuration loaded from: %s", config_path)
-
-    -- Merge default config with user config (user config overrides defaults)
     local config = helpers.deep_merge(defaults.default_config, user_config)
 
     defaults_base.init_base()
-    defaults_base.init_tree_sitter()
-    defaults_base.init_comment()
     defaults_base.init_auto_mkdir()
 
-    -- Load the TOML config
-    local languages_config, err = loader.load_config(languages_path)
+    local languages_config, lang_err = loader.load_config(languages_path)
+    local languages = {}
     if not languages_config then
-        logger.config_error(languages_path, err)
-        return
+        logger.config_error(languages_path, lang_err)
     else
-        local languages = {}
         for _, language in ipairs(languages_config.language) do
             languages[language["name"]] = language
         end
-        defaults_lsp.setup(languages)
         defaults_tabs.setup_tabs(languages)
     end
 
-    -- Initialize resolvers
     resolver_implementations.initalize_resolvers()
     helpers.resolve_configs(config, nil, false)
 
-    -- Setup commands
     commands.setup_helix_health_command()
     commands.setup_sudo_write_command()
 
-    -- Late init resolvers
     helpers.late_init_resolvers()
+
+    -- Defer heavy plugin setup to after UI renders
+    vim.schedule(function()
+        defaults_base.init_tree_sitter()
+        -- Defer CMP + conform to InsertEnter, LSP servers register now
+        if next(languages) then
+            defaults_lsp.setup_deferred(languages)
+        end
+    end)
 end
 
 M.define_resolver = function(path, resolver)

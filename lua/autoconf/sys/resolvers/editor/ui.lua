@@ -55,19 +55,8 @@ M.jump_label_alphabet = function(value)
         return
     end
 
-    -- Store alphabet for jump plugins
     vim.g.helix_jump_alphabet = value
-
-    -- Configure hop.nvim if available
-    local hop_ok, hop = pcall(require, "hop")
-    if hop_ok then
-        hop.setup({
-            keys = value,
-        })
-        logger.resolver_success("editor.jump-label-alphabet", "configured with hop.nvim: " .. value)
-    else
-        logger.resolver_success("editor.jump-label-alphabet", "stored for jump plugins: " .. value)
-    end
+    logger.resolver_success("editor.jump-label-alphabet", "stored: " .. value)
 end
 
 
@@ -113,43 +102,24 @@ M.indent_heuristic = function(value)
 end
 
 M.indent_guides = function(value)
-    -- Validate that the value is a table
-    if type(value) ~= "table" then
-        logger.resolver_error("editor.indent-guides", "must be a table, got: " .. type(value))
-        return
-    end
-
-    local render = value["render"]
-    local character = value["character"] or "│"
-    local skip_levels = value["skip-levels"] or 0
-
-    -- Check if ibl (indent-blankline v3) is available
-    local ibl_ok, ibl = pcall(require, "ibl")
-    if not ibl_ok then
-        if render then
-            logger.resolver_error("editor.indent-guides", "ibl not found (indent-blankline v3 required)")
-        else
-            logger.resolver_success("editor.indent-guides", "disabled (plugin not found)")
+    -- Defer ibl setup to after UI renders
+    vim.schedule(function()
+        if type(value) ~= "table" then
+            return
         end
-        return
-    end
 
-    if render then
-        -- Configure ibl with proper v3 structure
-        local config = {
-            indent = {
-                char = character,
-            },
-            scope = { enabled = false },
-        }
+        local render = value["render"]
+        local character = value["character"] or "│"
 
-        ibl.setup(config)
-        logger.resolver_success("editor.indent-guides", "enabled with character: " .. character)
-    else
-        -- Disable indent guides by setting char to empty string
-        ibl.setup({ indent = { char = "" } })
-        logger.resolver_success("editor.indent-guides", "disabled")
-    end
+        local ibl_ok, ibl = pcall(require, "ibl")
+        if not ibl_ok then return end
+
+        if render then
+            ibl.setup({ indent = { char = character }, scope = { enabled = false } })
+        else
+            ibl.setup({ indent = { char = "" } })
+        end
+    end)
 end
 
 -- UI-related functions will be moved here

@@ -1,21 +1,12 @@
 local M = {}
 
--- Cache require calls at the top
-local ok_treesitter, treesitter_configs
-local ok_comment, comment
-local ok_lualine = pcall(require, "lualine")
-
--- Try loading the required modules
-ok_treesitter, treesitter_configs = pcall(require, "nvim-treesitter.configs")
-ok_comment, comment = pcall(require, "Comment")
-
 M.init_base = function()
     vim.cmd("set shortmess+=I")
     vim.g.mapleader = " "
     vim.g.maplocalleader = ","
 
     -- Hide default mode display if lualine is installed
-    if ok_lualine then
+    if pcall(require, "lualine") then
         vim.opt.showmode = false
     end
 
@@ -30,6 +21,7 @@ M.init_base = function()
 end
 
 M.init_tree_sitter = function()
+    local ok_treesitter, treesitter_configs = pcall(require, "nvim-treesitter.configs")
     if not ok_treesitter then
         return
     end
@@ -45,6 +37,8 @@ M.init_tree_sitter = function()
 end
 
 M.init_comment = function()
+    vim.cmd("silent! packadd comment.nvim")
+    local ok_comment, comment = pcall(require, "Comment")
     if not ok_comment then
         return
     end

@@ -29,9 +29,9 @@ M.dependencies = {
         module = nil  -- Check runtimepath only
     },
     {
-        name = "telescope.nvim",
-        desc = "Fuzzy finder for file picker functionality",
-        module = nil  -- Check runtimepath only
+        name = "fzf-lua",
+        desc = "Fast fuzzy finder for file picker functionality",
+        module = "fzf-lua"
     },
     {
         name = "nvim-treesitter",
@@ -57,11 +57,6 @@ M.dependencies = {
         name = "bufferline.nvim",
         desc = "Buffer line/tab display at the top of the editor",
         module = "bufferline"
-    },
-    {
-        name = "hop.nvim",
-        desc = "Jump navigation plugin for jump-label functionality",
-        module = "hop"
     },
     {
         name = "lsp_lines",

@@ -41,9 +41,13 @@ end
 
 
 M.statusline = function(value)
-    -- Register lualine dependency
+    -- Defer lualine setup to avoid double-init (themekit also calls lualine.setup for theme colors)
+    vim.schedule(function()
+        M._setup_lualine(value)
+    end)
+end
 
-    -- Check if lualine is available
+M._setup_lualine = function(value)
     local lualine_ok, lualine = pcall(require, "lualine")
     if not lualine_ok then
         logger.plugin_missing("lualine.nvim")

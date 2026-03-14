@@ -20,6 +20,11 @@ local function get_lsp_setup()
 end
 
 local function setup_cmp()
+    -- Load opt plugins before requiring
+    vim.cmd("silent! packadd nvim-cmp")
+    vim.cmd("silent! packadd cmp-buffer")
+    vim.cmd("silent! packadd cmp-nvim-lsp")
+    vim.cmd("silent! packadd cmp-path")
     local ok_cmp_lsp, cmp_lsp = pcall(require, "cmp_nvim_lsp")
     local ok_cmp, cmp = pcall(require, "cmp")
     if not ok_cmp_lsp or not ok_cmp then
@@ -160,6 +165,25 @@ M.setup = function(languages)
     setup_cmp()
     setup_languages(languages)
     setup_conform()
+end
+
+--- Deferred setup: registers LSP servers immediately but defers CMP + conform
+--- to first InsertEnter for faster startup
+M.setup_deferred = function(languages)
+    -- LSP server registration is cheap with vim.lsp.config (no require needed)
+    setup_languages(languages)
+
+    -- Defer CMP and conform until first InsertEnter
+    local deferred_done = false
+    vim.api.nvim_create_autocmd("InsertEnter", {
+        once = true,
+        callback = function()
+            if deferred_done then return end
+            deferred_done = true
+            setup_cmp()
+            setup_conform()
+        end,
+    })
 end
 
 return M

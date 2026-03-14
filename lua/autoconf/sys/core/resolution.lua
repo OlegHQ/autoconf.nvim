@@ -114,13 +114,10 @@ function M.resolve_configs(config, prefix, debug)
         local full_key = prefix == "" and key or (prefix .. "." .. key)
 
         if type(value) == "table" then
-            -- First try to resolve this path as a whole (in case there's a resolver that handles nested configs)
             if not try_resolve_with_fallback(full_key, value, debug) then
-                -- If no resolver found, recursively process nested tables
                 M.resolve_configs(value, full_key, debug)
             end
         else
-            -- Try to resolve with hierarchical fallback
             try_resolve_with_fallback(full_key, value, debug)
         end
     end
