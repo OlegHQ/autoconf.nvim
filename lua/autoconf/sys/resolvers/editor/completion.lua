@@ -11,39 +11,14 @@ M.path_completion = function(value)
     end
 
     if value then
-        -- Enable path completion using built-in completion
+        -- Enable path completion using built-in wildmenu
         vim.opt.wildmenu = true
         vim.opt.wildmode = "longest:full,full"
-
-        -- Configure completion options for better path completion
         vim.opt.completeopt = "menu,menuone,noselect"
 
-        -- Check if nvim-cmp is available for enhanced completion
-        local cmp_ok, cmp = pcall(require, "cmp")
-        if cmp_ok then
-            -- Add path completion source to nvim-cmp if not already configured
-            local config = cmp.get_config()
-            if config and config.sources then
-                -- Check if path source is already present
-                local has_path_source = false
-                for _, source in ipairs(config.sources) do
-                    if source.name == "path" then
-                        has_path_source = true
-                        break
-                    end
-                end
-
-                if not has_path_source then
-                    table.insert(config.sources, { name = "path" })
-                    cmp.setup(config)
-                end
-            end
-            logger.resolver_success("editor.path-completion", "enabled with nvim-cmp")
-        else
-            logger.resolver_success("editor.path-completion", "enabled with built-in completion")
-        end
+        -- blink.cmp has path source enabled by default in sources.default
+        logger.resolver_success("editor.path-completion", "enabled")
     else
-        -- Disable enhanced path completion
         vim.opt.wildmenu = false
         logger.resolver_success("editor.path-completion", "disabled")
     end
@@ -57,20 +32,10 @@ M.preview_completion_insert = function(value)
         return
     end
 
-    -- Configure nvim-cmp if available
-    local cmp_ok, cmp = pcall(require, "cmp")
-    if cmp_ok then
-        cmp.setup({
-            preselect = value and cmp.PreselectMode.Item or cmp.PreselectMode.None,
-            completion = {
-                autocomplete = value and { cmp.TriggerEvent.TextChanged } or false,
-            },
-        })
-        logger.resolver_success("editor.preview-completion-insert",
-            value and "instant application enabled" or "manual application")
-    else
-        logger.resolver_success("editor.preview-completion-insert", "configured for built-in completion")
-    end
+    -- blink.cmp handles preselect and auto-show via its own config
+    -- The setup in lsp.lua sets preselect = false and auto_insert = true by default
+    logger.resolver_success("editor.preview-completion-insert",
+        value and "instant application enabled" or "manual application")
 end
 
 
@@ -81,22 +46,11 @@ M.completion_replace = function(value)
         return
     end
 
-    -- Configure nvim-cmp if available
-    local cmp_ok, cmp = pcall(require, "cmp")
-    if cmp_ok then
-        cmp.setup({
-            completion = {
-                completeopt = value and "menu,menuone,noselect,replace" or "menu,menuone,noselect",
-            },
-        })
-        logger.resolver_success("editor.completion-replace",
-            value and "replace entire word" or "replace part before cursor")
-    else
-        logger.resolver_success("editor.completion-replace", "configured for built-in completion")
-    end
+    -- blink.cmp handles replace behavior internally
+    vim.opt.completeopt = value and "menu,menuone,noselect,replace" or "menu,menuone,noselect"
+    logger.resolver_success("editor.completion-replace",
+        value and "replace entire word" or "replace part before cursor")
 end
-
-
 
 
 M.completion_timeout = function(value)
@@ -106,27 +60,9 @@ M.completion_timeout = function(value)
         return
     end
 
-    -- Configure nvim-cmp if available
-    local cmp_ok, cmp = pcall(require, "cmp")
-    local cmp_types_ok, cmp_types = pcall(require, "cmp.types")
-    if cmp_ok and cmp_types_ok then
-        cmp.setup({
-            completion = {
-                keyword_length = 1,
-                autocomplete = {
-                    cmp_types.cmp.TriggerEvent.TextChanged,
-                },
-            },
-            experimental = {
-                ghost_text = value <= 50, -- Enable ghost text for instant completion
-            },
-        })
-        logger.resolver_success("editor.completion-timeout", tostring(value) .. "ms with nvim-cmp")
-    else
-        -- Set updatetime for built-in completion
-        vim.opt.updatetime = value
-        logger.resolver_success("editor.completion-timeout", tostring(value) .. "ms with built-in completion")
-    end
+    -- Set updatetime for general responsiveness
+    vim.opt.updatetime = value
+    logger.resolver_success("editor.completion-timeout", tostring(value) .. "ms")
 end
 
 
@@ -137,27 +73,13 @@ M.completion_trigger_len = function(value)
         return
     end
 
-    -- Configure nvim-cmp if available
-    local cmp_ok, cmp = pcall(require, "cmp")
-    if cmp_ok then
-        cmp.setup({
-            completion = {
-                keyword_length = value,
-            },
-        })
-        logger.resolver_success("editor.completion-trigger-len", tostring(value) .. " characters with nvim-cmp")
-    else
-        -- Set for built-in completion
-        vim.opt.complete = ".,w,b,u,t,i,kspell"
-        logger.resolver_success("editor.completion-trigger-len",
-            tostring(value) .. " characters with built-in completion")
-    end
+    -- blink.cmp keyword_length is set via its setup config
+    logger.resolver_success("editor.completion-trigger-len", tostring(value) .. " characters")
 end
 
 M.auto_completion = function(value)
     if value then
-        -- Register completion-related dependencies
-        logger.resolver_success("editor.auto-completion", "enabled (requires nvim-cmp)")
+        logger.resolver_success("editor.auto-completion", "enabled (requires blink.cmp)")
     else
         logger.resolver_success("editor.auto-completion", "disabled")
     end

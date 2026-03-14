@@ -14,78 +14,42 @@ local function get_lsp_setup()
     local settings = { on_attach = on_attach }
     if capabilities then
         settings["capabilities"] = capabilities
-    else
     end
     return settings
 end
 
-local function setup_cmp()
-    -- Load opt plugins before requiring
-    vim.cmd("silent! packadd nvim-cmp")
-    vim.cmd("silent! packadd cmp-buffer")
-    vim.cmd("silent! packadd cmp-nvim-lsp")
-    vim.cmd("silent! packadd cmp-path")
-    local ok_cmp_lsp, cmp_lsp = pcall(require, "cmp_nvim_lsp")
-    local ok_cmp, cmp = pcall(require, "cmp")
-    if not ok_cmp_lsp or not ok_cmp then
+local function setup_blink()
+    local ok, blink = pcall(require, "blink.cmp")
+    if not ok then
         return
     end
 
-    capabilities = vim.tbl_deep_extend("force", {}, vim.lsp.protocol.make_client_capabilities(),
-        cmp_lsp.default_capabilities())
-
-    -- if feature("nvim-cmp") then
-    local cmp_select = { behavior = cmp.SelectBehavior.Select }
-
-    cmp.setup({
-        confirmation = { completeopt = "menu,menuone,noinsert" },
-        mapping = cmp.mapping.preset.insert({
-            ["<C-p>"] = cmp.mapping.select_prev_item(cmp_select),
-            ["<C-n>"] = cmp.mapping.select_next_item(
-                cmp_select),
-            ["<Tab>"] = cmp.mapping(function(fallback)
-                local function has_words_before()
-                    unpack = (unpack or table.unpack)
-                    local line, col = unpack(vim.api.nvim_win_get_cursor(0))
-                    return ((col ~= 0) and (vim.api.nvim_buf_get_lines(0, (line - 1), line, true)[1]:sub(col, col):match("%s") == nil))
-                end
-                if cmp.visible() then
-                    if (#cmp.get_entries() == 1) then
-                        return cmp.confirm({ select = true })
-                    else
-                        return cmp.select_next_item()
-                    end
-                elseif has_words_before() then
-                    cmp.complete()
-                    if (#cmp.get_entries() == 1) then
-                        return cmp.confirm({ select = true })
-                    else
-                        return nil
-                    end
-                else
-                    return fallback()
-                end
-            end, { "i", "s" }),
-            ["<CR>"] = cmp.mapping({
-                c = cmp.mapping.confirm({
-                    behavior =
-                        cmp.ConfirmBehavior.Replace,
-                    select = true
-                }),
-                i = function(fallback)
-                    if (cmp.visible() and cmp.get_active_entry()) then
-                        return cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = false })
-                    else
-                        return fallback()
-                    end
-                end,
-                s = cmp.mapping.confirm({ select = true })
-            }),
-            ["<C-Space>"] = cmp.mapping.complete()
-        }),
-        sources = cmp.config.sources({ { name = "nvim_lsp" }, { name = "buffer" } }),
-        preselect = false
+    blink.setup({
+        keymap = {
+            preset = "none",
+            ["<C-space>"] = { "show", "show_documentation", "hide_documentation" },
+            ["<C-e>"] = { "hide" },
+            ["<C-p>"] = { "select_prev", "fallback" },
+            ["<C-n>"] = { "select_next", "fallback" },
+            ["<Tab>"] = { "select_next", "snippet_forward", "fallback" },
+            ["<S-Tab>"] = { "select_prev", "snippet_backward", "fallback" },
+            ["<CR>"] = { "accept", "fallback" },
+        },
+        completion = {
+            list = {
+                selection = { preselect = false, auto_insert = true },
+            },
+            menu = { auto_show = true },
+            documentation = { auto_show = true, auto_show_delay_ms = 200 },
+            ghost_text = { enabled = false },
+        },
+        sources = {
+            default = { "lsp", "path", "buffer" },
+        },
+        signature = { enabled = true },
     })
+
+    capabilities = blink.get_lsp_capabilities()
 end
 
 local function setup_languages(languages)
@@ -107,7 +71,6 @@ local function setup_languages(languages)
         local lsp = config.lsp
         if (type(formatters) == "string") then
             formatters = { formatters }
-        else
         end
         formatters_by_ft[name] = formatters
 
@@ -162,25 +125,25 @@ local function setup_conform()
 end
 
 M.setup = function(languages)
-    setup_cmp()
+    setup_blink()
     setup_languages(languages)
     setup_conform()
 end
 
---- Deferred setup: registers LSP servers immediately but defers CMP + conform
+--- Deferred setup: registers LSP servers immediately but defers blink + conform
 --- to first InsertEnter for faster startup
 M.setup_deferred = function(languages)
     -- LSP server registration is cheap with vim.lsp.config (no require needed)
     setup_languages(languages)
 
-    -- Defer CMP and conform until first InsertEnter
+    -- Defer blink.cmp and conform until first InsertEnter
     local deferred_done = false
     vim.api.nvim_create_autocmd("InsertEnter", {
         once = true,
         callback = function()
             if deferred_done then return end
             deferred_done = true
-            setup_cmp()
+            setup_blink()
             setup_conform()
         end,
     })

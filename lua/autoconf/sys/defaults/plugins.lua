@@ -24,9 +24,9 @@ M.dependencies = {
         module = "lspconfig"
     },
     {
-        name = "nvim-cmp",
-        desc = "Completion plugin for auto-completion features",
-        module = nil  -- Check runtimepath only
+        name = "blink.cmp",
+        desc = "High-performance completion plugin (Rust-based)",
+        module = "blink.cmp"
     },
     {
         name = "fzf-lua",
@@ -47,11 +47,6 @@ M.dependencies = {
         name = "conform.nvim",
         desc = "Formatting plugin for auto-format functionality",
         module = "conform"
-    },
-    {
-        name = "cmp-path",
-        desc = "Path completion source for nvim-cmp",
-        module = "cmp_path"
     },
     {
         name = "bufferline.nvim",
