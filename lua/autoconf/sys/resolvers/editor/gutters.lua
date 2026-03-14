@@ -78,45 +78,50 @@ local function gutters(value)
         })
     end
 
-    -- Configure diff signs (git)
+    -- Configure diff signs (git) — defer to first buffer read
     if want_diff then
-        local gitsigns_ok, gitsigns = pcall(require, "gitsigns")
-        if gitsigns_ok then
-            gitsigns.setup({
-                signs = {
-                    add = { text = '│' },
-                    change = { text = '│' },
-                    delete = { text = '_' },
-                    topdelete = { text = '‾' },
-                    changedelete = { text = '~' },
-                    untracked = { text = '┆' },
-                },
-                signcolumn = true,
-                numhl = false,
-                linehl = false,
-                word_diff = false,
-                watch_gitdir = {
-                    interval = 1000,
-                    follow_files = true
-                },
-                attach_to_untracked = true,
-                current_line_blame = false,
-                sign_priority = 6,
-                update_debounce = 100,
-                status_formatter = nil,
-                max_file_length = 40000,
-                preview_config = {
-                    border = 'single',
-                    style = 'minimal',
-                    relative = 'cursor',
-                    row = 0,
-                    col = 1
-                },
-            })
-            logger.resolver_success("editor.gutters", "diff signs enabled with gitsigns.nvim")
-        else
-            logger.resolver_error("editor.gutters", "gitsigns.nvim plugin required for diff signs")
-        end
+        vim.api.nvim_create_autocmd({ "BufReadPost", "BufNewFile" }, {
+            once = true,
+            callback = function()
+                local gitsigns_ok, gitsigns = pcall(require, "gitsigns")
+                if gitsigns_ok then
+                    gitsigns.setup({
+                        signs = {
+                            add = { text = '│' },
+                            change = { text = '│' },
+                            delete = { text = '_' },
+                            topdelete = { text = '‾' },
+                            changedelete = { text = '~' },
+                            untracked = { text = '┆' },
+                        },
+                        signcolumn = true,
+                        numhl = false,
+                        linehl = false,
+                        word_diff = false,
+                        watch_gitdir = {
+                            interval = 1000,
+                            follow_files = true
+                        },
+                        attach_to_untracked = true,
+                        current_line_blame = false,
+                        sign_priority = 6,
+                        update_debounce = 100,
+                        status_formatter = nil,
+                        max_file_length = 40000,
+                        preview_config = {
+                            border = 'single',
+                            style = 'minimal',
+                            relative = 'cursor',
+                            row = 0,
+                            col = 1
+                        },
+                    })
+                    logger.resolver_success("editor.gutters", "diff signs enabled with gitsigns.nvim")
+                else
+                    logger.resolver_error("editor.gutters", "gitsigns.nvim plugin required for diff signs")
+                end
+            end,
+        })
     end
 
     logger.resolver_success("editor.gutters", "configured")

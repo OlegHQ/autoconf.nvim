@@ -1,19 +1,18 @@
--- Add the config directory to the Lua path
-local loader = require("autoconf.sys.core.loader")
 local resolvers = require("autoconf.sys.core.resolvers")
-local commands = require("autoconf.sys.commands")
-local defaults = require("autoconf.sys.defaults")
-local logger = require("autoconf.sys.core.logger")
-local resolver_implementations = require("autoconf.sys.resolvers")
 local helpers = require("autoconf.sys.core.helpers")
-local defaults_lsp = require("autoconf.sys.defaults.lsp")
-local defaults_base = require("autoconf.sys.defaults.base")
-local defaults_tabs = require("autoconf.sys.defaults.tabs")
-local plugins = require("autoconf.sys.defaults.plugins")
 
 local M = {}
 
 function M.init()
+    local loader = require("autoconf.sys.core.loader")
+    local commands = require("autoconf.sys.commands")
+    local defaults = require("autoconf.sys.defaults")
+    local logger = require("autoconf.sys.core.logger")
+    local resolver_implementations = require("autoconf.sys.resolvers")
+    local defaults_lsp = require("autoconf.sys.defaults.lsp")
+    local defaults_base = require("autoconf.sys.defaults.base")
+    local defaults_tabs = require("autoconf.sys.defaults.tabs")
+    local plugins = require("autoconf.sys.defaults.plugins")
     -- Setup logger command
     logger.setup_debug_command()
     plugins.register_all(resolvers)

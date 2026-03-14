@@ -7,24 +7,23 @@
 
 local resolvers = require("autoconf.sys.core.resolvers")
 
--- Load modules to trigger auto-registration of builder-based resolvers
-local base = require("autoconf.sys.resolvers.editor.base")
-local gutters = require("autoconf.sys.resolvers.editor.gutters")
-local statusline = require("autoconf.sys.resolvers.editor.statusline")
-local registers = require("autoconf.sys.resolvers.editor.registers")
-local scrolling = require("autoconf.sys.resolvers.editor.scrolling")
-local formatting = require("autoconf.sys.resolvers.editor.formatting")
-local appearance = require("autoconf.sys.resolvers.editor.appearance")
-local completion = require("autoconf.sys.resolvers.editor.completion")
-local ui = require("autoconf.sys.resolvers.editor.ui")
-local diagnostics = require("autoconf.sys.resolvers.editor.diagnostics")
-local lsp = require("autoconf.sys.resolvers.editor.lsp")
-local filepicker = require("autoconf.sys.resolvers.editor.filepicker")
-
 local M = {}
 
 -- Function to register editor-specific resolvers
 M.register_editor_resolvers = function()
+    -- Load modules to trigger auto-registration of builder-based resolvers
+    local base = require("autoconf.sys.resolvers.editor.base")
+    local gutters = require("autoconf.sys.resolvers.editor.gutters")
+    local statusline = require("autoconf.sys.resolvers.editor.statusline")
+    local registers = require("autoconf.sys.resolvers.editor.registers")
+    local scrolling = require("autoconf.sys.resolvers.editor.scrolling")
+    local formatting = require("autoconf.sys.resolvers.editor.formatting")
+    local appearance = require("autoconf.sys.resolvers.editor.appearance")
+    local completion = require("autoconf.sys.resolvers.editor.completion")
+    local ui = require("autoconf.sys.resolvers.editor.ui")
+    local diagnostics = require("autoconf.sys.resolvers.editor.diagnostics")
+    local lsp = require("autoconf.sys.resolvers.editor.lsp")
+    local filepicker = require("autoconf.sys.resolvers.editor.filepicker")
     -- ========================================
     -- Resolvers NOT using auto-registration
     -- (builder.custom or manual functions)

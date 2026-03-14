@@ -5,10 +5,7 @@ M.init_base = function()
     vim.g.mapleader = " "
     vim.g.maplocalleader = ","
 
-    -- Hide default mode display if lualine is installed
-    if pcall(require, "lualine") then
-        vim.opt.showmode = false
-    end
+    vim.opt.showmode = false
 
     vim.opt.fillchars:append({ eob = " " })
 
