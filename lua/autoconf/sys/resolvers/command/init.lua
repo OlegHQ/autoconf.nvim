@@ -22,6 +22,31 @@ M.register_command_resolvers = function()
         require("fzf-lua").diagnostics_document()
     end)
 
+    local mini_files = require("autoconf.sys.resolvers.editor.mini_files")
+    resolvers.define_command_resolver("mini_files_open", function()
+        if not mini_files.ensure_setup() then return end
+        MiniFiles.open()
+    end)
+    resolvers.define_command_resolver("mini_files_open_buffer", function()
+        if not mini_files.ensure_setup() then return end
+        local path = vim.api.nvim_buf_get_name(0)
+        if path == nil or path == "" then
+            MiniFiles.open()
+        else
+            MiniFiles.open(path)
+        end
+    end)
+    resolvers.define_command_resolver("mini_files_open_fresh", function()
+        if not mini_files.ensure_setup() then return end
+        MiniFiles.open(nil, false)
+    end)
+    resolvers.define_command_resolver("mini_files_toggle", function()
+        if not mini_files.ensure_setup() then return end
+        if not MiniFiles.close() then
+            MiniFiles.open()
+        end
+    end)
+
     local comment_api_cache = nil
     local function ensure_comment()
         if comment_api_cache then return comment_api_cache end

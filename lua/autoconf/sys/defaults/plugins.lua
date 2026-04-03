@@ -63,6 +63,11 @@ M.dependencies = {
         desc = "Indent guides for Neovim",
         module = "ibl"
     },
+    {
+        name = "mini.files",
+        desc = "Miller-column file explorer and directory manipulation",
+        module = "mini.files"
+    },
 }
 
 --- Register all plugin dependencies with the resolvers module

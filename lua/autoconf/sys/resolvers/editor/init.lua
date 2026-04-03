@@ -24,6 +24,7 @@ M.register_editor_resolvers = function()
     local diagnostics = require("autoconf.sys.resolvers.editor.diagnostics")
     local lsp = require("autoconf.sys.resolvers.editor.lsp")
     local filepicker = require("autoconf.sys.resolvers.editor.filepicker")
+    local mini_files = require("autoconf.sys.resolvers.editor.mini_files")
     -- ========================================
     -- Resolvers NOT using auto-registration
     -- (builder.custom or manual functions)
@@ -81,6 +82,7 @@ M.register_editor_resolvers = function()
     -- Diagnostics and file picker
     resolvers.define_resolver("editor.inline-diagnostics", diagnostics.inline_diagnostics)
     resolvers.define_resolver("editor.file-picker", filepicker.filepicker)
+    resolvers.define_resolver("editor.mini-files", mini_files.configure)
 
     -- Simple vim.opt pass-through resolvers
     resolvers.define_resolver("editor.tabstop", function(value) vim.opt.tabstop = value end)

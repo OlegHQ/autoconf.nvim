@@ -95,6 +95,16 @@ M.default_config = {
             ["git-exclude"] = true
         },
 
+        ["mini-files"] = {
+            windows = {
+                preview = true,
+            },
+            options = {
+                ["use_as_default_explorer"] = true,
+                ["permanent_delete"] = false,
+            },
+        },
+
         ["auto-pairs"] = {
             ["("] = ")",
             ["{"] = "}",
@@ -167,6 +177,8 @@ M.default_config = {
                 ["/"] = "global_search",
                 d = "diagnostics_picker",
                 b = "buffer_picker",
+                o = "mini_files_open",
+                O = "mini_files_open_buffer",
                 s = "substitute_word_globally",
                 S = "substitute_word_line",
                 k = "hover",
