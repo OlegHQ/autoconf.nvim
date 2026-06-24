@@ -215,7 +215,7 @@ M.register_command_resolvers = function()
     -- lsp commands
     resolvers.define_command_resolver("hover", {
         on_lsp_attach = true,
-        cmd = lsp_cmd("vim.lsp.buf.hover")
+        cmd = lsp_cmd("require('autoconf.sys.resolvers.editor.lsp').hover")
     })
     resolvers.define_command_resolver("rename_symbol", {
         on_lsp_attach = true,

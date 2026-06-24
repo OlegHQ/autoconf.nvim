@@ -3,6 +3,19 @@ local builder = require("autoconf.sys.core.resolver_builder")
 
 local M = {}
 
+local float_opts = {
+    hover = {},
+    signature_help = {},
+}
+
+function M.hover()
+    vim.lsp.buf.hover(float_opts.hover)
+end
+
+function M.signature_help()
+    vim.lsp.buf.signature_help(float_opts.signature_help)
+end
+
 M.auto_info = function(value)
     -- Validate that the value is a boolean
     if type(value) ~= "boolean" then
@@ -11,14 +24,9 @@ M.auto_info = function(value)
     end
 
     if value then
-        -- Enable auto-info by configuring LSP hover
-        vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
-            vim.lsp.handlers.hover, {
-                border = "rounded",
-                focusable = false,
-                style = "minimal",
-            }
-        )
+        float_opts.hover.border = float_opts.hover.border or "rounded"
+        float_opts.hover.focusable = false
+        float_opts.hover.style = "minimal"
 
         -- Auto-show hover info on cursor hold
         vim.api.nvim_create_autocmd("CursorHold", {
@@ -26,7 +34,7 @@ M.auto_info = function(value)
             callback = function()
                 local clients = vim.lsp.get_clients({ bufnr = 0 })
                 if #clients > 0 then
-                    vim.lsp.buf.hover()
+                    M.hover()
                 end
             end,
             desc = "Auto-show hover info"
@@ -49,18 +57,8 @@ M.popup_border = function(value)
 
     local border_style = value == "none" and "none" or "rounded"
 
-    -- Configure LSP borders
-    vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
-        vim.lsp.handlers.hover, {
-            border = border_style,
-        }
-    )
-
-    vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
-        vim.lsp.handlers.signature_help, {
-            border = border_style,
-        }
-    )
+    float_opts.hover.border = border_style
+    float_opts.signature_help.border = border_style
 
     -- Configure diagnostic borders
     vim.diagnostic.config({
@@ -124,7 +122,7 @@ M.auto_signature_help = function(value)
             callback = function()
                 local clients = vim.lsp.get_clients({ bufnr = 0 })
                 if #clients > 0 then
-                    vim.lsp.buf.signature_help()
+                    M.signature_help()
                 end
             end,
             desc = "Auto-show signature help"
@@ -176,16 +174,10 @@ M.display_signature_help_docs = function(value)
         return
     end
 
-    -- Configure signature help handler
-    vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
-        vim.lsp.handlers.signature_help, {
-            border = "rounded",
-            focusable = false,
-            style = "minimal",
-            -- Show or hide documentation based on value
-            show_documentation = value,
-        }
-    )
+    float_opts.signature_help.border = float_opts.signature_help.border or "rounded"
+    float_opts.signature_help.focusable = false
+    float_opts.signature_help.style = "minimal"
+    float_opts.signature_help.show_documentation = value
 
     logger.resolver_success("editor.lsp.display-signature-help-docs", value and "enabled" or "disabled")
 end
@@ -259,4 +251,3 @@ end
 
 -- LSP-related functions
 return M
-

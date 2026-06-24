@@ -11,27 +11,30 @@ local severity_map = {
 }
 
 M.inline_diagnostics = function(config)
-    local ok, lsp_lines = pcall(require, "lsp_lines")
-    if not ok then
-        logger.resolver_error("editor.inline-diagnostics", "lsp_lines module not found")
-        return
-    end
-
-    lsp_lines.setup()
-
     -- Validate config is a table
     if type(config) ~= "table" then
         logger.resolver_error("editor.inline-diagnostics", "must be a table, got: " .. type(config))
         return
     end
 
+    local inline_config = false
     if config["only-current-line"] then
-        vim.diagnostic.config({ virtual_lines = { only_current_line = true } })
+        inline_config = { only_current_line = true }
+    elseif config.enabled then
+        inline_config = true
+    end
+
+    if vim.fn.has("nvim-0.11") == 1 then
+        vim.diagnostic.config({ virtual_lines = inline_config })
         return
     end
 
-    if config.enabled then
-        vim.diagnostic.config({ virtual_lines = true })
+    local ok, lsp_lines = pcall(require, "lsp_lines")
+    if ok then
+        lsp_lines.setup()
+        vim.diagnostic.config({ virtual_lines = inline_config })
+    elseif inline_config then
+        logger.warn("editor.inline-diagnostics requested, but lsp_lines is not available")
     end
 end
 

@@ -51,7 +51,7 @@ local function gutters(value)
     end
 
     -- Configure sign column for diagnostics and diff
-    if want_diagnostics then
+    if want_diagnostics or want_diff then
         vim.opt.signcolumn = "yes"
     else
         vim.opt.signcolumn = "no"
@@ -118,7 +118,7 @@ local function gutters(value)
                     })
                     logger.resolver_success("editor.gutters", "diff signs enabled with gitsigns.nvim")
                 else
-                    logger.resolver_error("editor.gutters", "gitsigns.nvim plugin required for diff signs")
+                    logger.warn("editor.gutters diff signs requested, but gitsigns.nvim is not available")
                 end
             end,
         })
