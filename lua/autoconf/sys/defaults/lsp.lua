@@ -101,9 +101,12 @@ local function setup_languages(languages)
                 local final_config = vim.tbl_deep_extend("force", base_setup, custom_config)
 
                 if use_new_api then
-                    -- Use new vim.lsp.config API (Neovim 0.11+)
-                    vim.lsp.config[server_name] = final_config
-                    vim.lsp.enable(server_name)
+                    -- Merge with runtime/lsp defaults from nvim-lspconfig instead of replacing them.
+                    vim.lsp.config(server_name, final_config)
+                    local resolved_config = vim.lsp.config[server_name]
+                    if resolved_config and resolved_config.cmd then
+                        vim.lsp.enable(server_name)
+                    end
                 else
                     -- Use old lspconfig API (backward compatibility)
                     if lspconfig[server_name] then
