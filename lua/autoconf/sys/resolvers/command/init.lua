@@ -6,19 +6,19 @@ M.register_command_resolvers = function()
     -- File pickers (lazy-loaded on invocation, setup deferred to first use)
     local filepicker = require("autoconf.sys.resolvers.editor.filepicker")
     resolvers.define_command_resolver("file_picker", function()
-        filepicker.ensure_setup()
+        if not filepicker.ensure_setup() then return end
         require("fzf-lua").files()
     end)
     resolvers.define_command_resolver("global_search", function()
-        filepicker.ensure_setup()
+        if not filepicker.ensure_setup() then return end
         require("fzf-lua").live_grep()
     end)
     resolvers.define_command_resolver("buffer_picker", function()
-        filepicker.ensure_setup()
+        if not filepicker.ensure_setup() then return end
         require("fzf-lua").buffers()
     end)
     resolvers.define_command_resolver("diagnostics_picker", function()
-        filepicker.ensure_setup()
+        if not filepicker.ensure_setup() then return end
         require("fzf-lua").diagnostics_document()
     end)
 
