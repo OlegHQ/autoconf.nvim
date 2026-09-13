@@ -45,7 +45,9 @@ M.init_comment = function()
 end
 
 M.init_auto_mkdir = function()
+    local group = vim.api.nvim_create_augroup("AutoconfAutoMkdir", { clear = true })
     vim.api.nvim_create_autocmd({ "BufWritePre" }, {
+        group = group,
         callback = function()
             local dir = vim.fn.expand("<afile>:p:h")
             if vim.fn.isdirectory(dir) == 0 then
@@ -56,4 +58,3 @@ M.init_auto_mkdir = function()
 end
 
 return M
-

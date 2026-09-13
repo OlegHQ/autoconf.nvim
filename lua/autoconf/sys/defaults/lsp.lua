@@ -1,155 +1,245 @@
 local resolvers = require("autoconf.sys.core.resolvers")
+local completion = require("autoconf.sys.resolvers.editor.completion")
+local logger = require("autoconf.sys.core.logger")
 
 local M = {}
-local capabilities = nil
+local base_capabilities
 local formatters_by_ft = {}
+local configured_servers = {}
+local lsp_enabled = true
+local format_status = "not requested"
+local blink_status = "pending (setup on first InsertEnter)"
+local deferred_group
+local blink_setup_complete = false
 
-local function on_attach()
-    for _, value in ipairs(resolvers.on_lsp_attach_keymaps) do
-        value()
+local function get_base_capabilities()
+    if base_capabilities then return base_capabilities end
+
+    local ok, blink = pcall(require, "blink.cmp")
+    if ok and type(blink.get_lsp_capabilities) == "function" then
+        local caps_ok, caps = pcall(blink.get_lsp_capabilities)
+        if caps_ok and type(caps) == "table" then
+            base_capabilities = caps
+        else
+            logger.warn("Blink LSP capabilities unavailable; using Neovim defaults: " .. tostring(caps))
+        end
+    elseif not ok then
+        logger.warn("blink.cmp is unavailable; configured servers will use Neovim's default LSP capabilities")
     end
+
+    if not base_capabilities then
+        base_capabilities = vim.lsp.protocol.make_client_capabilities()
+    end
+    return base_capabilities
 end
 
 local function get_lsp_setup()
-    local settings = { on_attach = on_attach }
-    if capabilities then
-        settings["capabilities"] = capabilities
-    end
-    return settings
+    return {
+        on_attach = function()
+            for _, value in ipairs(resolvers.on_lsp_attach_keymaps) do value() end
+        end,
+        capabilities = completion.lsp_capabilities(get_base_capabilities()),
+    }
 end
 
-local function setup_blink()
-    local ok, blink = pcall(require, "blink.cmp")
-    if not ok then
+local function configure_server(server_name, final_config)
+    if vim.lsp.config ~= nil then
+        vim.lsp.config(server_name, final_config)
+        local resolved_config = vim.lsp.config[server_name]
+        if resolved_config and resolved_config.cmd then
+            configured_servers[server_name] = true
+            vim.lsp.enable(server_name, lsp_enabled)
+        end
         return
     end
 
-    blink.setup({
-        keymap = {
-            preset = "none",
-            ["<C-space>"] = { "show", "show_documentation", "hide_documentation" },
-            ["<C-e>"] = { "hide" },
-            ["<C-p>"] = { "select_prev", "fallback" },
-            ["<C-n>"] = { "select_next", "fallback" },
-            ["<Tab>"] = { "select_next", "snippet_forward", "fallback" },
-            ["<S-Tab>"] = { "select_prev", "snippet_backward", "fallback" },
-            ["<CR>"] = { "accept", "fallback" },
-        },
-        completion = {
-            list = {
-                selection = { preselect = false, auto_insert = true },
-            },
-            menu = { auto_show = true },
-            documentation = { auto_show = true, auto_show_delay_ms = 200 },
-            ghost_text = { enabled = false },
-        },
-        sources = {
-            default = { "lsp", "path", "buffer" },
-        },
-        signature = { enabled = true },
-    })
-
-    capabilities = blink.get_lsp_capabilities()
+    local ok, lspconfig = pcall(require, "lspconfig")
+    if not ok then
+        logger.warn("nvim-lspconfig unavailable; cannot configure " .. server_name)
+        return
+    end
+    if lspconfig[server_name] then
+        configured_servers[server_name] = true
+        lspconfig[server_name].setup(final_config)
+        if not lsp_enabled then
+            logger.warn("this Neovim version cannot reversibly disable legacy lspconfig server " .. server_name)
+        end
+    end
 end
 
 local function setup_languages(languages)
-    -- Check if we should use the new vim.lsp.config API (Neovim 0.11+)
-    local use_new_api = vim.lsp.config ~= nil
-    local lspconfig = nil
-
-    if not use_new_api then
-        -- Fall back to old lspconfig for older Neovim versions
-        local ok_lspconfig
-        ok_lspconfig, lspconfig = pcall(require, "lspconfig")
-        if not ok_lspconfig then
-            return
-        end
+    if vim.lsp.config == nil then
+        local ok, lspconfig = pcall(require, "lspconfig")
+        if not ok then return end
     end
 
     for name, config in pairs(languages) do
         local formatters = config.formatter
-        local lsp = config.lsp
-        if (type(formatters) == "string") then
-            formatters = { formatters }
-        end
-        formatters_by_ft[name] = formatters
+        if type(formatters) == "string" then formatters = { formatters } end
+        if formatters ~= nil then formatters_by_ft[name] = vim.deepcopy(formatters) end
 
-        -- Handle lsp configuration (string or table)
+        local lsp = config.lsp
         if lsp then
             local server_name
             local custom_config = {}
 
             if type(lsp) == "string" then
-                -- Legacy string format: lsp = "server_name"
                 server_name = lsp
             elseif type(lsp) == "table" then
-                -- New table format: lsp = { server = "name", cmd = {...}, settings = {...}, ... }
                 server_name = lsp.server
                 if server_name then
-                    -- Copy all fields except 'server' into custom_config
                     for key, value in pairs(lsp) do
-                        if key ~= "server" then
-                            custom_config[key] = value
-                        end
+                        if key ~= "server" then custom_config[key] = value end
                     end
                 end
             end
 
             if server_name then
-                local base_setup = get_lsp_setup()
-                -- Merge custom config with base setup (custom config takes precedence)
-                local final_config = vim.tbl_deep_extend("force", base_setup, custom_config)
-
-                if use_new_api then
-                    -- Merge with runtime/lsp defaults from nvim-lspconfig instead of replacing them.
-                    vim.lsp.config(server_name, final_config)
-                    local resolved_config = vim.lsp.config[server_name]
-                    if resolved_config and resolved_config.cmd then
-                        vim.lsp.enable(server_name)
-                    end
-                else
-                    -- Use old lspconfig API (backward compatibility)
-                    if lspconfig[server_name] then
-                        lspconfig[server_name].setup(final_config)
-                    end
-                end
+                local final_config = vim.tbl_deep_extend("force", get_lsp_setup(), custom_config)
+                configure_server(server_name, final_config)
             end
         end
     end
 end
 
-local function setup_conform()
-    local ok_conform, conform = pcall(require, "conform")
-    if not ok_conform then
-        return
+local function setup_blink()
+    if blink_setup_complete then return true end
+
+    local ok, blink = pcall(require, "blink.cmp")
+    if not ok or type(blink.setup) ~= "function" then
+        blink_status = "unavailable"
+        completion.set_blink_status(blink_status)
+        logger.warn("completion settings are unsupported because blink.cmp.setup is unavailable")
+        return false
     end
 
-    return conform.setup({ formatters_by_ft = formatters_by_ft, format_on_save = { timeout_ms = 500, lsp_format = "fallback" }, default_format_opts = { lsp_format = "fallback" } })
+    local setup_ok, err = pcall(blink.setup, completion.blink_options())
+    if not setup_ok then
+        blink_status = "setup failed: " .. tostring(err)
+        completion.set_blink_status(blink_status)
+        logger.warn("Blink setup failed; requested completion settings are not effective: " .. tostring(err))
+        return false
+    end
+
+    blink_setup_complete = true
+    blink_status = "setup requested through Blink's one-shot public API; active config has no public getter"
+    completion.set_blink_status(blink_status)
+    return true
 end
 
-M.setup = function(languages)
+local function setup_deferred_blink()
+    if blink_setup_complete then return end
+    deferred_group = deferred_group or vim.api.nvim_create_augroup("AutoconfDeferredCompletion", { clear = true })
+    vim.api.nvim_clear_autocmds({ group = deferred_group })
+    if vim.api.nvim_get_mode().mode:sub(1, 1) == "i" then
+        setup_blink()
+    else
+        vim.api.nvim_create_autocmd("InsertEnter", {
+            group = deferred_group,
+            once = true,
+            callback = setup_blink,
+            desc = "Initialize Blink completion on first insert",
+        })
+    end
+end
+
+local function format_with_conform(bufnr)
+    local ok, conform = pcall(require, "conform")
+    if not ok or type(conform.format) ~= "function" then
+        format_status = "Conform unavailable; LSP fallback requested"
+        return false
+    end
+
+    local opts = { bufnr = bufnr, timeout_ms = 500, lsp_format = "fallback" }
+    local formatters = formatters_by_ft[vim.bo[bufnr].filetype]
+    if formatters ~= nil then opts.formatters = vim.deepcopy(formatters) end
+    local call_ok, result = pcall(conform.format, opts)
+    if not call_ok then
+        format_status = "Conform failed; LSP fallback requested"
+        logger.warn("Conform format failed: " .. tostring(result))
+        return false
+    end
+    format_status = result == false and "Conform found no applicable formatter; LSP fallback requested"
+        or "Conform invoked on demand"
+    return result ~= false
+end
+
+function M.format_buffer(bufnr)
+    bufnr = bufnr or vim.api.nvim_get_current_buf()
+    if not vim.api.nvim_buf_is_valid(bufnr) or vim.bo[bufnr].buftype ~= "" then return false end
+
+    if format_with_conform(bufnr) then return true end
+    local clients = vim.lsp.get_clients({ bufnr = bufnr, method = "textDocument/formatting" })
+    if #clients == 0 then
+        format_status = "formatting unavailable"
+        return false
+    end
+    local ok, err = pcall(vim.lsp.buf.format, { bufnr = bufnr, timeout_ms = 2000 })
+    if not ok then logger.warn("LSP formatting unavailable: " .. tostring(err)) end
+    if format_status == "Conform unavailable; LSP fallback requested"
+        or format_status == "Conform failed; LSP fallback requested"
+        or format_status == "Conform found no applicable formatter; LSP fallback requested" then
+        format_status = ok and "LSP fallback on demand" or "formatting unavailable"
+    end
+    if ok then format_status = "LSP formatting requested on demand" end
+    return ok
+end
+
+function M.set_lsp_enabled(value)
+    if type(value) ~= "boolean" then return false end
+    lsp_enabled = value
+    vim.g.lsp_enabled = value
+
+    if type(vim.lsp.enable) == "function" then
+        for server_name in pairs(configured_servers) do
+            local ok, err = pcall(vim.lsp.enable, server_name, value)
+            if not ok then logger.warn("could not " .. (value and "enable " or "disable ") .. server_name .. ": " .. tostring(err)) end
+        end
+    elseif not value then
+        logger.warn("this Neovim version cannot reversibly disable configured LSP servers")
+    end
+    return true
+end
+
+function M.setup(languages)
+    setup_languages(languages or {})
     setup_blink()
-    setup_languages(languages)
-    setup_conform()
 end
 
---- Deferred setup: registers LSP servers immediately but defers blink + conform
---- to first InsertEnter for faster startup
-M.setup_deferred = function(languages)
-    -- LSP server registration is cheap with vim.lsp.config (no require needed)
-    setup_languages(languages)
+function M.setup_deferred(languages)
+    setup_languages(languages or {})
+    setup_deferred_blink()
+end
 
-    -- Defer blink.cmp and conform until first InsertEnter
-    local deferred_done = false
-    vim.api.nvim_create_autocmd("InsertEnter", {
-        once = true,
-        callback = function()
-            if deferred_done then return end
-            deferred_done = true
-            setup_blink()
-            setup_conform()
-        end,
-    })
+function M.status()
+    local servers = {}
+    local restart_required = false
+    for name in pairs(configured_servers) do
+        local enabled = lsp_enabled
+        if type(vim.lsp.is_enabled) == "function" then
+            local ok, value = pcall(vim.lsp.is_enabled, name)
+            if ok then enabled = value end
+        end
+        local config = vim.lsp.config and vim.lsp.config[name]
+        local snippet_support = config and vim.tbl_get(config, "capabilities", "textDocument", "completion", "completionItem", "snippetSupport")
+        if snippet_support ~= nil and snippet_support ~= completion.snippets_enabled() then
+            restart_required = true
+        end
+        table.insert(servers, { name = name, enabled = enabled })
+    end
+    table.sort(servers, function(a, b) return a.name < b.name end)
+    local current_format_status = format_status
+    if vim.g.autoconf_auto_format_requested == true and current_format_status == "not requested" then
+        current_format_status = "armed; Conform is deferred until BufWritePre"
+    end
+    return {
+        lsp_requested = lsp_enabled,
+        servers = servers,
+        format_requested = vim.g.autoconf_auto_format_requested,
+        format_effective = current_format_status,
+        blink_effective = blink_status,
+        restart_required = restart_required,
+    }
 end
 
 return M

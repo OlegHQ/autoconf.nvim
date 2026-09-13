@@ -12,8 +12,21 @@ local function collect_config_keys(config, prefix, keys)
         local full_key = prefix == "" and key or (prefix .. "." .. key)
 
         if type(value) == "table" then
-            -- Recursively collect keys from nested tables
-            collect_config_keys(value, full_key, keys)
+            local count, maximum = 0, 0
+            local is_array = true
+            for array_key in pairs(value) do
+                if type(array_key) ~= "number" or array_key < 1 or array_key % 1 ~= 0 then
+                    is_array = false
+                    break
+                end
+                count = count + 1
+                maximum = math.max(maximum, array_key)
+            end
+            if is_array and count == maximum and count > 0 then
+                table.insert(keys, { key = full_key, value = value, type = "table" })
+            else
+                collect_config_keys(value, full_key, keys)
+            end
         else
             -- Add the key-value pair to our collection
             table.insert(keys, {
@@ -37,8 +50,12 @@ local function analyze_config_keys(config_keys, resolvers)
         local status
         local is_resolved = false
 
+        -- Workbench settings are validated atomically by its explicit TOML schema.
+        if item.key:sub(1, #"editor.workbench.") == "editor.workbench." then
+            is_resolved = require("autoconf.sys.resolvers.editor.workbench").is_supported_path(item.key)
+            status = is_resolved and "✓ RESOLVED (workbench schema)" or "✗ NOT RESOLVED"
         -- Special handling for keymap paths
-        if resolvers.is_keymap_path(item.key) then
+        elseif resolvers.is_keymap_path(item.key) then
             is_resolved = resolvers.is_keymap_resolved(item.key)
             status = is_resolved and "✓ KEYMAP RESOLVED" or "✗ KEYMAP FAILED"
 
@@ -230,6 +247,37 @@ function M.setup_helix_health_command()
         -- Analyze plugin dependencies
         local analyzed_plugins, installed_plugins, missing_plugins, plugin_names = analyze_plugin_dependencies(resolvers)
 
+        local feature_lines = { "## Effective Feature State", "" }
+        local completion = require("autoconf.sys.resolvers.editor.completion").status()
+        local editor_lsp = require("autoconf.sys.resolvers.editor.lsp").status()
+        local runtime_lsp = require("autoconf.sys.defaults.lsp").status()
+        local requested = completion.requested
+        table.insert(feature_lines, string.format(
+            "Completion requested: auto=%s, path=%s, preview-insert=%s, keyword-length=%s, snippets=%s",
+            tostring(requested.auto_completion), tostring(requested.path_completion),
+            tostring(requested.preview_insert), tostring(requested.keyword_length), tostring(requested.snippets)
+        ))
+        table.insert(feature_lines, "Completion effective: " .. tostring(completion.effective))
+        table.insert(feature_lines, string.format(
+            "Auto-format requested: %s; effective: %s",
+            tostring(runtime_lsp.format_requested), tostring(runtime_lsp.format_effective)
+        ))
+        local server_states = {}
+        for _, server in ipairs(runtime_lsp.servers) do
+            table.insert(server_states, server.name .. "=" .. tostring(server.enabled))
+        end
+        table.insert(feature_lines, string.format(
+            "LSP requested: %s; configured server state: %s",
+            tostring(runtime_lsp.lsp_requested), #server_states > 0 and table.concat(server_states, ", ") or "none"
+        ))
+        table.insert(feature_lines, string.format(
+            "LSP helpers: auto-hover=%s, auto-signature=%s, messages=%s, progress=%s",
+            tostring(editor_lsp.auto_info), tostring(editor_lsp.auto_signature_help),
+            tostring(editor_lsp.display_messages), tostring(editor_lsp.display_progress_messages)
+        ))
+        table.insert(feature_lines, "Restart required for configured LSP capabilities: " .. tostring(runtime_lsp.restart_required))
+        table.insert(feature_lines, "")
+
         -- Generate all sections
         local lines = {}
 
@@ -255,6 +303,10 @@ function M.setup_helix_health_command()
         -- 4. Plugin Dependencies
         local plugin_lines = generate_plugin_dependencies_section(analyzed_plugins)
         for _, line in ipairs(plugin_lines) do
+            table.insert(lines, line)
+        end
+
+        for _, line in ipairs(feature_lines) do
             table.insert(lines, line)
         end
 

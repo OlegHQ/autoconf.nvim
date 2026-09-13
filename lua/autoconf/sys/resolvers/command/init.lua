@@ -239,7 +239,7 @@ M.register_command_resolvers = function()
     })
     resolvers.define_command_resolver("goto_reference", {
         on_lsp_attach = true,
-        cmd = lsp_cmd("vim.lsp.buf.references")
+        cmd = lsp_cmd("require('autoconf.sys.resolvers.editor.lsp').references")
     })
     resolvers.define_command_resolver("goto_implementation", {
         on_lsp_attach = true,

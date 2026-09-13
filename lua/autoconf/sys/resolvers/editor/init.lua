@@ -25,6 +25,7 @@ M.register_editor_resolvers = function()
     local lsp = require("autoconf.sys.resolvers.editor.lsp")
     local filepicker = require("autoconf.sys.resolvers.editor.filepicker")
     local mini_files = require("autoconf.sys.resolvers.editor.mini_files")
+    local workbench = require("autoconf.sys.resolvers.editor.workbench")
     -- ========================================
     -- Resolvers NOT using auto-registration
     -- (builder.custom or manual functions)
@@ -70,7 +71,10 @@ M.register_editor_resolvers = function()
     resolvers.define_resolver("editor.bufferline", statusline.bufferline)
     resolvers.define_resolver("editor.statusline", statusline.statusline)
 
-    -- LSP resolvers (auto-registered: enable, display-messages, display-progress-messages, snippets)
+    -- LSP toggles and helpers
+    resolvers.define_resolver("editor.lsp.display-messages", lsp.display_messages)
+    resolvers.define_resolver("editor.lsp.display-progress-messages", lsp.display_progress_messages)
+    resolvers.define_resolver("editor.lsp.snippets", lsp.snippets)
     resolvers.define_resolver("editor.auto-info", lsp.auto_info)
     resolvers.define_resolver("editor.popup-border", lsp.popup_border)
     resolvers.define_resolver("editor.lsp.auto-signature-help", lsp.auto_signature_help)
@@ -81,6 +85,7 @@ M.register_editor_resolvers = function()
 
     -- Diagnostics and file picker
     resolvers.define_resolver("editor.inline-diagnostics", diagnostics.inline_diagnostics)
+    resolvers.define_resolver("editor.workbench", workbench.configure)
     resolvers.define_resolver("editor.file-picker", filepicker.filepicker)
     resolvers.define_resolver("editor.mini-files", mini_files.configure)
 

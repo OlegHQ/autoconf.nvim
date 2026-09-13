@@ -2,6 +2,7 @@ local logger = require("autoconf.sys.core.logger")
 local builder = require("autoconf.sys.core.resolver_builder")
 
 local M = {}
+local auto_save_group = vim.api.nvim_create_augroup("AutoconfAutoSave", { clear = true })
 
 -- Middle-click paste requires custom keymap setup
 M.middle_click_paste = builder.boolean_toggle("editor.middle-click-paste", {
@@ -63,13 +64,15 @@ M.auto_save = function(config)
         return
     end
 
-    -- Clear any existing auto-save autocmds
-    vim.api.nvim_clear_autocmds({ pattern = "*", event = { "FocusLost", "CursorHold" } })
+    -- Replace only Autoconf's own hooks; CursorHold is also used by hover and
+    -- other user/plugin callbacks.
+    vim.api.nvim_clear_autocmds({ group = auto_save_group })
 
     -- Handle focus-lost auto-save
     local focus_lost = config["focus-lost"]
     if type(focus_lost) == "boolean" and focus_lost then
         vim.api.nvim_create_autocmd("FocusLost", {
+            group = auto_save_group,
             pattern = "*",
             callback = function()
                 vim.cmd("silent! wall")
@@ -83,12 +86,12 @@ M.auto_save = function(config)
     if type(after_delay) == "table" and after_delay.enable then
         local timeout = tonumber(after_delay.timeout) or 3000
         vim.api.nvim_create_autocmd("CursorHold", {
+            group = auto_save_group,
             pattern = "*",
             callback = function()
                 vim.cmd("silent! update")
             end,
             desc = "Auto-save after delay",
-            group = vim.api.nvim_create_augroup("AutoSaveAfterDelay", { clear = true })
         })
         vim.opt.updatetime = timeout
     end

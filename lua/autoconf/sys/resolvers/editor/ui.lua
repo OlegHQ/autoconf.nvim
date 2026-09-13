@@ -2,6 +2,7 @@ local logger = require("autoconf.sys.core.logger")
 local builder = require("autoconf.sys.core.resolver_builder")
 
 local M = {}
+local wrap_colorcolumn_state = {}
 
 -- Mouse - maps boolean to vim.opt.mouse value
 M.mouse = builder.vim_opt_mapped("editor.mouse", "mouse", {
@@ -137,11 +138,8 @@ M.soft_wrap = function(config)
         return
     end
 
-    if not enable then
-        return
-    end
-
-    -- Set basic wrap settings
+    -- Apply both branches explicitly; `false` must undo settings from a
+    -- previous true configuration rather than silently retaining them.
     vim.wo.wrap = enable
     vim.wo.linebreak = enable and config["max-wrap"] ~= 0
 
@@ -153,6 +151,8 @@ M.soft_wrap = function(config)
         vim.o.showbreak = wrap_indicator
     elseif enable then
         vim.o.showbreak = "↪ "
+    else
+        vim.o.showbreak = ""
     end
 
     -- Handle indent retention
@@ -169,14 +169,28 @@ M.soft_wrap = function(config)
 
     -- Handle wrap at text width
     local wrap_at_text_width = config["wrap-at-text-width"]
+    local win = vim.api.nvim_get_current_win()
+    local saved_colorcolumn = wrap_colorcolumn_state[win]
     if wrap_at_text_width and vim.bo.textwidth > 0 then
-        vim.wo.colorcolumn = tostring(vim.bo.textwidth)
+        local colorcolumn = tostring(vim.bo.textwidth)
+        if not saved_colorcolumn then
+            saved_colorcolumn = { original = vim.wo[win].colorcolumn }
+            wrap_colorcolumn_state[win] = saved_colorcolumn
+        end
+        vim.wo[win].colorcolumn = colorcolumn
+        saved_colorcolumn.applied = colorcolumn
     elseif wrap_at_text_width then
         logger.resolver_warning("editor.soft-wrap", "wrap-at-text-width requires text-width to be set")
+    elseif saved_colorcolumn then
+        -- Restore only while our value is still present; retain later user/plugin
+        -- changes instead of treating them as ours to dispose.
+        if vim.wo[win].colorcolumn == saved_colorcolumn.applied then
+            vim.wo[win].colorcolumn = saved_colorcolumn.original
+        end
+        wrap_colorcolumn_state[win] = nil
     end
 
     logger.resolver_success("editor.soft-wrap", "configured")
 end
 
 return M
-

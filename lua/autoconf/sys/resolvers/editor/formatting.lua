@@ -2,43 +2,49 @@ local logger = require("autoconf.sys.core.logger")
 local builder = require("autoconf.sys.core.resolver_builder")
 
 local M = {}
+local auto_format_group = vim.api.nvim_create_augroup("AutoconfAutoFormat", { clear = true })
+local trim_whitespace_group = vim.api.nvim_create_augroup("AutoconfTrimWhitespace", { clear = true })
+local trim_final_newlines_group = vim.api.nvim_create_augroup("AutoconfTrimFinalNewlines", { clear = true })
+local final_newline_group = vim.api.nvim_create_augroup("AutoconfFinalNewline", { clear = true })
 
 M.auto_format = function(value)
     -- Validate that the value is a boolean
     if type(value) ~= "boolean" then
         logger.resolver_error("editor.auto-format", "must be a boolean, got: " .. type(value))
-        return
+        return false
     end
 
+    vim.api.nvim_clear_autocmds({ group = auto_format_group })
+    vim.g.autoconf_auto_format_requested = value
+
     if value then
-        -- Enable auto-formatting using LSP and conform.nvim if available
-        local conform_ok, conform = pcall(require, "conform")
-        if conform_ok then
-            -- Use conform.nvim for formatting
-            vim.api.nvim_create_autocmd("BufWritePre", {
-                pattern = "*",
-                callback = function(args)
-                    conform.format({ bufnr = args.buf })
-                end,
-                desc = "Auto-format on save using conform.nvim"
-            })
-            logger.resolver_success("editor.auto-format", "enabled with conform.nvim")
-        else
-            -- Fallback to LSP formatting
-            vim.api.nvim_create_autocmd("BufWritePre", {
-                pattern = "*",
-                callback = function()
-                    vim.lsp.buf.format({ timeout_ms = 2000 })
-                end,
-                desc = "Auto-format on save using LSP"
-            })
-            logger.resolver_success("editor.auto-format", "enabled with LSP formatting")
-        end
+        vim.api.nvim_create_autocmd("BufWritePre", {
+            group = auto_format_group,
+            pattern = "*",
+            callback = function(args)
+                if not vim.api.nvim_buf_is_valid(args.buf) or vim.bo[args.buf].buftype ~= "" then return end
+                require("autoconf.sys.defaults.lsp").format_buffer(args.buf)
+            end,
+            desc = "Autoconf format on save (lazy Conform/LSP)",
+        })
+        logger.resolver_success("editor.auto-format", "enabled with one lazy save hook")
+        return true
     else
-        -- Disable auto-formatting by clearing the autocommand
-        vim.api.nvim_clear_autocmds({ pattern = "*", event = "BufWritePre" })
+        vim.api.nvim_clear_autocmds({ group = auto_format_group })
         logger.resolver_success("editor.auto-format", "disabled")
+        return true
     end
+end
+
+function M.auto_format_status()
+    local requested = vim.g.autoconf_auto_format_requested == true
+    local ok, hooks = pcall(vim.api.nvim_get_autocmds, { group = auto_format_group })
+    return {
+        requested = requested,
+        effective = ok and #hooks > 0 or false,
+        hook_count = ok and #hooks or 0,
+        state = ok and "ready" or "error",
+    }
 end
 
 M.trim_trailing_whitespace = function(value)
@@ -49,8 +55,10 @@ M.trim_trailing_whitespace = function(value)
     end
 
     if value then
+        vim.api.nvim_clear_autocmds({ group = trim_whitespace_group })
         -- Trim trailing whitespace on save
         vim.api.nvim_create_autocmd("BufWritePre", {
+            group = trim_whitespace_group,
             pattern = "*",
             callback = function()
                 local save_cursor = vim.fn.getpos(".")
@@ -61,6 +69,7 @@ M.trim_trailing_whitespace = function(value)
         })
         logger.resolver_success("editor.trim-trailing-whitespace", "enabled")
     else
+        vim.api.nvim_clear_autocmds({ group = trim_whitespace_group })
         logger.resolver_success("editor.trim-trailing-whitespace", "disabled")
     end
 end
@@ -73,8 +82,10 @@ M.trim_final_newlines = function(value)
     end
 
     if value then
+        vim.api.nvim_clear_autocmds({ group = trim_final_newlines_group })
         -- Trim final newlines on save
         vim.api.nvim_create_autocmd("BufWritePre", {
+            group = trim_final_newlines_group,
             pattern = "*",
             callback = function()
                 local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
@@ -94,6 +105,7 @@ M.trim_final_newlines = function(value)
         })
         logger.resolver_success("editor.trim-final-newlines", "enabled")
     else
+        vim.api.nvim_clear_autocmds({ group = trim_final_newlines_group })
         logger.resolver_success("editor.trim-final-newlines", "disabled")
     end
 end
@@ -107,9 +119,11 @@ M.insert_final_newline = function(value)
     end
 
     if value then
+        vim.api.nvim_clear_autocmds({ group = final_newline_group })
         -- Add final newline on save
         vim.opt.fixendofline = true
         vim.api.nvim_create_autocmd("BufWritePre", {
+            group = final_newline_group,
             pattern = "*",
             callback = function()
                 local lines = vim.api.nvim_buf_get_lines(0, -2, -1, false)
@@ -121,6 +135,7 @@ M.insert_final_newline = function(value)
         })
         logger.resolver_success("editor.insert-final-newline", "enabled")
     else
+        vim.api.nvim_clear_autocmds({ group = final_newline_group })
         vim.opt.fixendofline = false
         logger.resolver_success("editor.insert-final-newline", "disabled")
     end
